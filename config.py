@@ -117,7 +117,7 @@ parser.add_option("--content-image", dest='stylize_content_image',
 parser.add_option("--output-img-path", dest='stylize_output_img_path', default="./images/combined_network/",
                   help="path for saving the output image")
 parser.add_option("--stylize-model", dest='stylize_model',
-                  default="./save/img_transform_network/20210107_165731/models/epoch_25_20210107_171206_1e0_1e4.model",
+                  default="./ckpt_epoch_15.pth",
                   help="saved model to be used for stylizing the image.")
 parser.add_option("--stylize-no", dest='stylize_eval_no', default=0, type='int',
                   help="style index used for stylizing the image during evaluation time.")
