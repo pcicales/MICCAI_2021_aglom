@@ -56,7 +56,7 @@ class MICCAI(Dataset):
                 original = Image.open(self.imgs_dir + original[0])
                 copyImage = original.copy()
                 copyfileName = file_name + '-stylized-' + str(i + 1) + '.jpg'
-                print("copyfileName: ",copyfileName)
+                print("copyfileName: ", copyfileName)
                 copyImage.save(self.imgs_dir + copyfileName)
                 self.patients[patient].append(copyfileName)
                 break
