@@ -17,11 +17,6 @@ parser.add_option('--style-augm', dest='style_augm', default=1, type='int',
 parser.add_option('--style-ref_src', dest='style_ref_src', default='init', type='str',
                   help='where to get styles to transfer to (init or style_folder)')
 
-parser.add_option('--headstart', dest='headstart', default=1, type='int',
-                  help='Give image transform network headstart training (default 1)')
-parser.add_option('--headstart-epochs', dest='headstart_epochs', default=10, type='int',
-                  help='Training headstart epochs to give image transform network (default 10)')
-
 # Train options
 parser.add_option("--epochs", dest='epochs', type='int', default=500,
                   help="number of training epochs, default is 100")
@@ -32,10 +27,10 @@ parser.add_option("--mix-styles", dest='mix_styles', type='int', default=1,
                   help="whether or not to mix 3 styles 1")
 parser.add_option("--style-entropy", dest='style_entropy', type='int', default=0,
                   help="whether or not to initialize as normal distribution instead of all ones")
-parser.add_option("--show-style-choices", dest='show_style_choices', type='int', default=0,
-                  help="whether or not to initialize as normal distribution instead of all ones")
 
 # Weights and Hyperparameters
+parser.add_option("--stack-size", dest='stack_size', type='int', default=8,
+                  help="number of images sampled from one patient")
 parser.add_option("--num-styles", dest='num_styles', type='int', default=12,
                   help="number of style images used during training, default is 12")
 parser.add_option("--content-weight", dest='cont_weight', type='float', default=1,
