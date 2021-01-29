@@ -20,7 +20,7 @@ parser.add_option('--style-ref_src', dest='style_ref_src', default='init', type=
 # Train options
 parser.add_option("--epochs", dest='epochs', type='int', default=500,
                   help="number of training epochs, default is 100")
-parser.add_option("--batch-size", dest='batch_size', type='int', default=12,
+parser.add_option("--batch-size", dest='batch_size', type='int', default=3,
                   help="batch size for training, default is 16. Must be <= num_styles for combined model")
 
 parser.add_option("--mix-styles", dest='mix_styles', type='int', default=1,
@@ -31,7 +31,7 @@ parser.add_option("--style-entropy", dest='style_entropy', type='int', default=0
 # Weights and Hyperparameters
 parser.add_option("--stack-size", dest='stack_size', type='int', default=8,
                   help="number of images sampled from one patient")
-parser.add_option("--num-styles", dest='num_styles', type='int', default=12,
+parser.add_option("--num-styles", dest='num_styles', type='int', default=27,
                   help="number of style images used during training, default is 12")
 parser.add_option("--content-weight", dest='cont_weight', type='float', default=1,
                   help="weight for content loss, default is 1e5")
@@ -71,12 +71,8 @@ parser.add_option('--loo', '--loo', dest='test_fold_val', default=0, type='int',
                   help='Testing Fold (default 0)')
 
 # Directories
-parser.add_option("--save-dir", dest='save_dir', default='./save/combined',
+parser.add_option("--save-dir", dest='save_dir', default='./save',
                   help='saving directory of training information (default: ./save/combined)')
-parser.add_option("--style-directory", dest='style_img_dir',
-                  default='/home/cougarnet.uh.edu/srizvi7/Desktop/AMR_project_style_transfer/'
-                          'images/style_reference_images/',
-                  help="path to reference style images (if used)")
 parser.add_option('--classifier-load_model_path', dest='classifier_load_model_path',
                   default='/home/cougarnet.uh.edu/srizvi7/Desktop/AMR_style_transfer_project/'
                           'save/classifier/20201212_182753/models/5143.ckpt',
@@ -87,13 +83,11 @@ parser.add_option("--log-interval", dest='log_interval', type='int', default=40,
                   help="number of images after which all losses are logged, default is 40")
 parser.add_option('--vf', '--val_freq', dest='val_freq', default=80, type='int',
                   help='run validation for each <val_freq> iterations (default: 200)')
-parser.add_option("--img-network-ckpt_interval", dest='img_network_ckpt_interval', type='int', default=5,
-                  help="save checkpoint of image transformation network every X epochs (default: 5)")
 
 # Classifier Options
 parser.add_option('--classifier-model', dest='classifier_model', default='densenet',
                   help='vgg, inception, resnet, densenet (default: densenet)')
-parser.add_option('--Cj', '--num-workers', dest='num_workers', default=16, type='int',
+parser.add_option('--j', '--num-workers', dest='num_workers', default=16, type='int',
                   help='number of data loading workers (default: 16)')
 
 # Image size
