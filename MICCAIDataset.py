@@ -12,6 +12,7 @@ warnings.filterwarnings("ignore")
 os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(options.gpu_used)
 device = torch.device("cuda" if options.cuda else "cpu")
 
+#Test added
 
 class MICCAIDataset(Dataset):
     def __init__(self, mode="train", input_size=(256, 256)):
