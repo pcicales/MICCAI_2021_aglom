@@ -16,7 +16,7 @@ device = torch.device("cuda" if options.cuda else "cpu")
 class MICCAIDataset(Dataset):
     def __init__(self, mode="train", input_size=(256, 256)):
         # self.imgs_dir = options.dataset  # Path to AMR dataset
-        self.imgs_dir = '/home/cougarnet.uh.edu/srizvi7/Desktop/ABMR_dataset/AMR_raw_gloms/'
+        self.imgs_dir = '/home/cougarnet.uh.edu/pcicales/Documents/data/ABMR_dataset/AMR_raw_gloms/'
         self.mode = mode
         self.input_size = input_size
         self.label_code = {"Non-AMR": 0, "AMR": 1, "Inconclusive": 2, "None": 3}
@@ -36,8 +36,12 @@ class MICCAIDataset(Dataset):
 
         # Create patient dictionary
         for file in glom_files:
-            patient_name_list = file.split('-')
-            patient_name = "-".join(patient_name_list[:-1])
+            if '-.jpg' in file:
+                patient_name_list = file.split('-')
+                patient_name = "-".join(patient_name_list[:-2])
+            else:
+                patient_name_list = file.split('-')
+                patient_name = "-".join(patient_name_list[:-1])
             if patient_name in self.patients:
                 self.patients[patient_name].append(file)
             else:

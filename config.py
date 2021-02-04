@@ -62,10 +62,10 @@ parser.add_option('--num_classes', dest='num_classes', default=2, type='int',
 
 # Dataset
 parser.add_option("--dataset", dest='dataset',
-                  default="/home/cougarnet.uh.edu/srizvi7/Desktop/ABMR_dataset/AMR_raw_gloms/",
+                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/",
                   help="path to dataset")
 parser.add_option("--dtf", dest='data_folds',
-                  default="/home/cougarnet.uh.edu/srizvi7/Desktop/AMR_project_style_transfer/folds_npz/",
+                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/ABMR_dataset/folds/",
                   help="path to npz fold files")
 parser.add_option('--loo', '--loo', dest='test_fold_val', default=0, type='int',
                   help='Testing Fold (default 0)')
@@ -85,7 +85,7 @@ parser.add_option('--vf', '--val_freq', dest='val_freq', default=80, type='int',
                   help='run validation for each <val_freq> iterations (default: 200)')
 
 # Classifier Options
-parser.add_option('--classifier-model', dest='classifier_model', default='densenet',
+parser.add_option('--classifier-model', dest='classifier_model', default='morphset',
                   help='vgg, inception, resnet, densenet (default: densenet)')
 parser.add_option('--j', '--num-workers', dest='num_workers', default=16, type='int',
                   help='number of data loading workers (default: 16)')

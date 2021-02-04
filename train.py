@@ -190,6 +190,11 @@ if __name__ == '__main__':
     elif options.classifier_model == 'densenet':
         net = densenet.densenet121(pretrained=True, drop_rate=0.2)
         net.classifier = nn.Linear(net.classifier.in_features, out_features=options.num_classes)
+    elif options.classifier_model == 'morphset':
+        enc = resnet.resnet50(pretrained=True)
+        enc = nn.Sequential(*(list(enc.children())[:-2]))
+        net = MorphSet(options.img_c, options.num_classes, enc)
+        # net.classifier = nn.Linear(net.classifier.in_features, out_features=options.num_classes)
 
     log_string('{} model Generated.'.format(options.classifier_model))
     log_string("Number of trainable parameters: {}".format(sum(param.numel() for param in net.parameters())))
