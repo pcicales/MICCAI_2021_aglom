@@ -60,6 +60,22 @@ parser.add_option("--native_labels", dest='native_labels', default=1, type='int'
 parser.add_option('--num_classes', dest='num_classes', default=2, type='int',
                   help='number of classes to predict, 2 or 3 (default: 3)')
 
+####################
+# MorphSet OPTIONS #
+####################
+parser.add_option('--hea', '--heads', dest='heads', default=1, type='int',
+                  help='The number of attention heads in the set operations.')
+parser.add_option('--prsc', '--prsc', dest='preset_channels', default=256, type='int',
+                  help='The number of channels prior to the set operations, must have a perfect root.')
+parser.add_option('--sp', '--sp', dest='set_points', default=8, type='int',
+                  help='The number of unique points (or seeds), morphological appearances.')
+parser.add_option('--enc', '--enc', dest='encoder', default='resnet50', type='str',
+                  help='Which encoder to use prior to the setformer.')
+parser.add_option('--posc', '--posc', dest='postset_channels', default=512, type='int',
+                  help='The number of channels after the set operations.')
+
+
+
 # Dataset
 parser.add_option("--dataset", dest='dataset',
                   default="/home/cougarnet.uh.edu/pcicales/Documents/data/",
@@ -86,7 +102,7 @@ parser.add_option('--vf', '--val_freq', dest='val_freq', default=80, type='int',
 
 # Classifier Options
 parser.add_option('--classifier-model', dest='classifier_model', default='morphset',
-                  help='vgg, inception, resnet, densenet (default: densenet)')
+                  help='vgg, inception, resnet, densenet, morphset (default: densenet)')
 parser.add_option('--j', '--num-workers', dest='num_workers', default=16, type='int',
                   help='number of data loading workers (default: 16)')
 

@@ -1,11 +1,13 @@
 """ Full assembly of the parts to form the complete network """
-
+from config import options
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from models import *
 from .parts import *
 
+# If you want to test if splits are behaving as you want:
+# torch.split(x, 8)[0] == x.view(3, 8, 8192, 4, 4)[0]
 
 class MorphSet(nn.Module):
     def __init__(self, n_channels, n_classes, enc):
@@ -13,31 +15,34 @@ class MorphSet(nn.Module):
         self.n_channels = n_channels
         self.n_classes = n_classes
 
+        if options.encoder == 'resnet50':
+            self.inchans = 2048
+
         self.enc = enc
-        self.inc = DoubleConv(n_channels, 64)
-        self.down1 = Down(64, 128)
-        self.down2 = Down(128, 256)
-        self.down3 = Down(256, 512)
-        factor = 2 if True else 1
-        self.down4 = Down(512, 1024 // factor)
-        self.up1 = Up(1024, 512 // factor, True)
-        self.up2 = Up(512, 256 // factor, True)
-        self.up3 = Up(256, 128 // factor, True)
-        self.up4 = Up(128, 64, True)
-        self.outc = OutConv(64, n_classes)
+        self.SE1 = SE_Block(self.inchans)
+        self.preset = Convk1(in_channels=self.inchans, out_channels=options.preset_channels)
+        self.SE2 = SE_Block(options.preset_channels)
+        self.setformer = ConvSet(A=1, B=options.set_points, K=3, P=int(options.preset_channels**0.5),
+                                 stride=2, pad=1, heads=options.heads)
+        self.SE3 = SE_Block(options.preset_channels * options.set_points)
+        self.postset = Convk1(in_channels=options.preset_channels * options.set_points,
+                              out_channels=options.postset_channels)
+        self.SE4 = SE_Block(options.postset_channels)
+        self.fpool = nn.AdaptiveAvgPool2d(1)
+        self.classifier = Out(in_channels=options.postset_channels * options.stack_size, out_channels=options.num_classes)
 
     def forward(self, x):
-        x1 = self.enc(x)
-        # torch.matmul(x1.permute(0,2,3,1).unsqueeze(3).repeat(1,1,1,8,1), torch.FloatTensor(8, 2048, 8).cuda()).shape
-
-        x1 = self.inc(x)
-        x2 = self.down1(x1)
-        x3 = self.down2(x2)
-        x4 = self.down3(x3)
-        x5 = self.down4(x4)
-        x = self.up1(x5, x4)
-        x = self.up2(x, x3)
-        x = self.up3(x, x2)
-        x = self.up4(x, x1)
-        logits = self.outc(x)
-        return logits
+        x = self.enc(x)
+        x = self.SE1(x)
+        x = self.preset(x)
+        x = self.SE2(x)
+        # x.shape = b, c, h, w
+        x = self.setformer(x)
+        x = self.SE3(x)
+        # x.shape = b, c*set, h1, w1
+        x = self.postset(x)
+        x = self.SE4(x)
+        x = x.reshape(options.batch_size, options.stack_size * x.shape[1], x.shape[2], x.shape[3]).contiguous()
+        x = self.fpool(x)
+        x = self.classifier(x)
+        return x

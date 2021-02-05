@@ -194,7 +194,6 @@ if __name__ == '__main__':
         enc = resnet.resnet50(pretrained=True)
         enc = nn.Sequential(*(list(enc.children())[:-2]))
         net = MorphSet(options.img_c, options.num_classes, enc)
-        # net.classifier = nn.Linear(net.classifier.in_features, out_features=options.num_classes)
 
     log_string('{} model Generated.'.format(options.classifier_model))
     log_string("Number of trainable parameters: {}".format(sum(param.numel() for param in net.parameters())))

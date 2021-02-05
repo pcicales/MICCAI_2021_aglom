@@ -33,15 +33,29 @@ class MICCAIDataset(Dataset):
         elif self.mode == "test":
             glom_files = np.load(options.data_folds + 'amr_fold{}.npz'.format(options.test_fold_val))['FILES'].tolist()
             print("Testing image count:", len(glom_files))
-
+        #     if '.scn' in ALL_IMG[i]:
+        #         SLIDE_ID[i] = ALL_IMG[i].split('/')[-1].split('.scn')[0]
+        #     elif '.ndpi' in ALL_IMG[i]:
+        #         SLIDE_ID[i] = ALL_IMG[i].split('/')[-1].split('.ndpi')[0]
+        #     else:
+        #         name_list = ALL_IMG[i].split('/')[-1].split('-')
+        #         if '-.jpg' in ALL_IMG[i]:
+        #             SLIDE_ID[i] = '-'.join(name_list[0:-2])
+        #         else:
+        #             SLIDE_ID[i] = '-'.join(name_list[0:-1])
         # Create patient dictionary
         for file in glom_files:
-            if '-.jpg' in file:
-                patient_name_list = file.split('-')
-                patient_name = "-".join(patient_name_list[:-2])
+            if '.scn' in file:
+                file = file.split('/')[-1].split('.scn')[0]
+            elif '.ndpi' in file:
+                file = file.split('/')[-1].split('.ndpi')[0]
             else:
-                patient_name_list = file.split('-')
-                patient_name = "-".join(patient_name_list[:-1])
+                patient_name_list = file.split('/')[-1].split('-')
+                if '-.jpg' in file:
+                    patient_name = "-".join(patient_name_list[:-2])
+                else:
+                    patient_name = "-".join(patient_name_list[:-1])
+
             if patient_name in self.patients:
                 self.patients[patient_name].append(file)
             else:
@@ -109,5 +123,9 @@ class MICCAIDataset(Dataset):
                 patient_samples.append(img)
 
         target_label = 'AMR' if existing_patient_images[0][0] == 'A' else 'Non-AMR'
+
+        for temp in patient_samples:
+            if isinstance(temp, str):
+                print('Something bad happened.')
 
         return torch.stack(patient_samples, dim=0), self.label_code[target_label]
