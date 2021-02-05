@@ -48,10 +48,11 @@ def train():
         targets, outputs = [], []
 
         for batch_id, (data, target) in enumerate(train_loader):
+            len_batch = len(data)
             global_step += 1
 
             # Reshape stacks into batch, [options.batchsize * options.stack_size, 3, options.img_h, options.img_w]
-            data = data.view(options.batch_size * options.stack_size, 3, options.img_h, options.img_w)
+            data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
 
             data = data.cuda()
             target = target.cuda()
@@ -100,6 +101,8 @@ def evaluate(**kwargs):
     targets, outputs = [], []
     with torch.no_grad():
         for batch_id, (data, target) in enumerate(test_loader):
+            len_batch = len(data)
+            data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
             data, target = data.cuda(), target.cuda()
             output = net(data)
             batch_loss = criterion(output, target)
@@ -107,7 +110,7 @@ def evaluate(**kwargs):
             outputs += [output]
             test_loss += batch_loss
 
-        test_loss /= (batch_id + 1)
+        test_loss /= len(test_loader)
         test_acc = compute_accuracy(torch.cat(targets), torch.cat(outputs))
         # scheduler.step(test_loss)
 
@@ -231,7 +234,7 @@ if __name__ == '__main__':
     train_dataset = MICCAIDataset(mode='train', input_size=(options.img_h, options.img_w))
     train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
                               shuffle=True, num_workers=options.num_workers, drop_last=False)
-    test_dataset = MICCAIDataset(mode='test', input_size=(options.img_h, options.img_w))
+    test_dataset = MICCAIDataset(mode='val', input_size=(options.img_h, options.img_w))
     test_loader = DataLoader(test_dataset, batch_size=options.batch_size,
                              shuffle=False, num_workers=options.num_workers, drop_last=False)
 

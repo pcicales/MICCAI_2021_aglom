@@ -95,9 +95,9 @@ parser.add_option('--classifier-load_model_path', dest='classifier_load_model_pa
                   help='path to load a .ckpt model')
 
 # Log and Validation Intervals/Frequencies
-parser.add_option("--log-interval", dest='log_interval', type='int', default=40,
+parser.add_option("--log-interval", dest='log_interval', type='int', default=10,
                   help="number of images after which all losses are logged, default is 40")
-parser.add_option('--vf', '--val_freq', dest='val_freq', default=80, type='int',
+parser.add_option('--vf', '--val_freq', dest='val_freq', default=20, type='int',
                   help='run validation for each <val_freq> iterations (default: 200)')
 
 # Classifier Options

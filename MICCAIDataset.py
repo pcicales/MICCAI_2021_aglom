@@ -30,19 +30,10 @@ class MICCAIDataset(Dataset):
             for i in set:
                 glom_files = glom_files + np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
             print('Training on 4 folds, image count:', len(glom_files))
-        elif self.mode == "test":
+        elif self.mode == "val":
             glom_files = np.load(options.data_folds + 'amr_fold{}.npz'.format(options.test_fold_val))['FILES'].tolist()
             print("Testing image count:", len(glom_files))
-        #     if '.scn' in ALL_IMG[i]:
-        #         SLIDE_ID[i] = ALL_IMG[i].split('/')[-1].split('.scn')[0]
-        #     elif '.ndpi' in ALL_IMG[i]:
-        #         SLIDE_ID[i] = ALL_IMG[i].split('/')[-1].split('.ndpi')[0]
-        #     else:
-        #         name_list = ALL_IMG[i].split('/')[-1].split('-')
-        #         if '-.jpg' in ALL_IMG[i]:
-        #             SLIDE_ID[i] = '-'.join(name_list[0:-2])
-        #         else:
-        #             SLIDE_ID[i] = '-'.join(name_list[0:-1])
+
         # Create patient dictionary
         for file in glom_files:
             if '.scn' in file:
@@ -69,6 +60,7 @@ class MICCAIDataset(Dataset):
         existing_patient_images = self.patients[list(self.patients.keys())[index]]
         patient_samples = []
         # Sample options.stack_size images from this patient
+        target_label = 'AMR' if existing_patient_images[0][0] == 'A' else 'Non-AMR'
         if len(existing_patient_images) < options.stack_size:
             # Take all existing images
             for img_name in existing_patient_images:
@@ -115,8 +107,9 @@ class MICCAIDataset(Dataset):
 
                 patient_samples.append(img)
         else:
+
             # Patient has more images than options.stack_size, sample stack_size images from the vector
-            for i in range(options.stack_size):
+            for _ in range(options.stack_size):
                 # Sampling without replacement
                 original = random.sample(existing_patient_images, 1)
                 existing_patient_images.remove(original[0])
@@ -139,8 +132,6 @@ class MICCAIDataset(Dataset):
                 if self.mode == 'test':
                     img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
                 patient_samples.append(img)
-
-        target_label = 'AMR' if existing_patient_images[0][0] == 'A' else 'Non-AMR'
 
         for temp in patient_samples:
             if isinstance(temp, str):

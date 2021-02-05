@@ -42,7 +42,7 @@ class MorphSet(nn.Module):
         # x.shape = b, c*set, h1, w1
         x = self.postset(x)
         x = self.SE4(x)
-        x = x.reshape(options.batch_size, options.stack_size * x.shape[1], x.shape[2], x.shape[3]).contiguous()
+        x = x.reshape(len(x) // options.stack_size, options.stack_size * x.shape[1], x.shape[2], x.shape[3]).contiguous()
         x = self.fpool(x)
         x = self.classifier(x)
         return x
