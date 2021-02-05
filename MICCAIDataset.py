@@ -71,7 +71,25 @@ class MICCAIDataset(Dataset):
         # Sample options.stack_size images from this patient
         if len(existing_patient_images) < options.stack_size:
             # Take all existing images
-            patient_samples += existing_patient_images
+            for img_name in existing_patient_images:
+                img = Image.open(self.imgs_dir + img_name)
+                img = transforms.ToTensor()(img)
+                img = (img - img.min()) / (img.max() - img.min())
+                if self.mode == 'train':
+                    # normalization & augmentation
+                    img = transforms.Resize(self.input_size, Image.BILINEAR)(img)  # Bilinear resizing?
+                    img = transforms.RandomHorizontalFlip()(img)
+                    img = transforms.RandomVerticalFlip()(img)
+                    # Classifier transforms in main script...
+
+                if self.mode == 'val':
+                    img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+
+                if self.mode == 'test':
+                    img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+
+                patient_samples.append(img)
+
             for i in range(options.stack_size - len(existing_patient_images)):
                 # Sampling with replacement, ToDo: Add in option for sampling without replacement
                 sampled_img = random.sample(existing_patient_images, 1)
