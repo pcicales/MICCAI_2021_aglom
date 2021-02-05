@@ -8,7 +8,7 @@ parser.add_option("--mode", dest="mode", default="train",
                   help="set to train or eval")
 parser.add_option("--cuda", dest="cuda", type='int', default=1,
                   help="set it to 1 for running on GPU, 0 for CPU")
-parser.add_option("--gpu-used", dest="gpu_used", type='int', default=1,
+parser.add_option("--gpu-used", dest="gpu_used", type='str', default='2',
                   help="set gpu number to use for training (default 0)")
 
 # Style data augmentation
