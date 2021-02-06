@@ -16,7 +16,7 @@ device = torch.device("cuda" if options.cuda else "cpu")
 class MICCAIDataset(Dataset):
     def __init__(self, mode="train", input_size=(256, 256)):
         # self.imgs_dir = options.dataset  # Path to AMR dataset
-        self.imgs_dir = '/home/cougarnet.uh.edu/pcicales/Documents/data/ABMR_dataset/AMR_raw_gloms/'
+        self.imgs_dir = options.dataset
         self.mode = mode
         self.input_size = input_size
         self.label_code = {"Non-AMR": 0, "AMR": 1, "Inconclusive": 2, "None": 3}
@@ -41,7 +41,7 @@ class MICCAIDataset(Dataset):
             elif '.ndpi' in file:
                 file = file.split('/')[-1].split('.ndpi')[0]
             else:
-                patient_name_list = file.split('/')[-1].split('-')
+                patient_name_list = file.split('-')
                 if '-.jpg' in file:
                     patient_name = "-".join(patient_name_list[:-2])
                 else:
@@ -62,7 +62,8 @@ class MICCAIDataset(Dataset):
         # Sample options.stack_size images from this patient
         target_label = 'AMR' if existing_patient_images[0][0] == 'A' else 'Non-AMR'
         if len(existing_patient_images) < options.stack_size:
-            # Take all existing images
+            # Take all existing images, shuffle torandomize order
+            random.shuffle(existing_patient_images)
             for img_name in existing_patient_images:
                 img = Image.open(self.imgs_dir + img_name)
                 img = transforms.ToTensor()(img)

@@ -1,7 +1,7 @@
 import os
 import PIL
 from datetime import datetime
-from MICCAIDataset import MICCAIDataset
+from AMRDataset import AMRDataset
 import torch
 import torch.nn as nn
 from torch import optim
@@ -26,6 +26,45 @@ def log_string(out_str):
     print(out_str)
 
 
+# Train command
+# python train_classifier.py --epochs 500 --lr 1e-3 --single-optimizer Adam --batch-size 8 --log-interval 75
+# --val_freq 150 --save-dir ./save/classifier --gpu-used 0 --label-mode samp --native_labels 2 --num_classes 2
+# --img_h 512 --img_w 512 --loo 0
+
+
+# Table of contents for classifier save folders
+# (label mode was cons)
+# 20201212_182753 - old dataloader                                              (val acc 80.73%)
+# 29219195_231225 - new dataloader, lr 1e-3, SGD optimizer, batch size 16, label mode cons          (val acc 74.83%)
+# 20210106_100618 - new dataloader, lr 1e-2, SGD optimizer, batch size 16, label mode cons          (val acc 77.89%)
+# 20210106_100825 - new dataloader, lr 1e-3, Adam optimizer, batch size 16, label mode cons         (val acc 79.93%)
+# 20210107_141639 - sanity check, same experiment                                                   (val acc 79.93%)
+
+# (Changed AMR dataloader, now has min-max scaling, commented out imagenet normalization in this code)
+# 20210108_082652 - new dataloader, lr 1e-3, Adam optimizer, batch size 16, label mode cons         (val acc 77.89%)
+
+# (New dataloader, label sampling and can model 2 or 3 classes)
+# 20210110_075034 - label mode samp, native labels 2, num_classes 2, Adam, lr 1e-3                  (val acc 86.83%)
+# 20210110_111017 - label mode cons, native labels 2, num_classes 2, Adam, lr 1e-3                  (val acc 84.64%)
+
+# (Added learning rate decay)
+# 20210110_155329 - label mode samp, native labels 2, num_classes 2, Adam, lr 1e-3                  (val acc 86.12%)*Bug
+
+# (Changed learning rate decay to calculate off of test_loss instead of test_acc. Also fixed
+#   min-max scaling to be per image within the batch)
+# 20210110_222910 - label mode samp, native labels 2, num_classes 2, Adam, lr 1e-3                  (val acc 64.41%)
+
+# Removed min-max scaling from before classifier, uncommented min-max scaling in dataloader
+# 20210111_093700 - label mode samp, native labels 2, num_classes 2, Adam, lr 1e-3                  (val acc 86.12%)
+
+# Native labels 1 experiment
+# 20210114_120952 - label mode samp, native labels 1, num_classes 2, Adam, lr 1e-3                  (val acc 85.26%)
+
+# (512x512 experiments)
+# 20210115_080801 - label sampling, test fold val 0, 512x512, batch size 8, lr 1e-3, test fold 0    (val acc 86.12%)
+#  - label sampling, test fold val 0, 512x512, batch size 8, lr 1e-4, test fold 0    (val acc )
+
+
 def train():
     log_string('Optimizer is ' + str(options.single_optimizer))
     log_string('lr is ' + str(options.lr))
@@ -40,7 +79,7 @@ def train():
     best_acc = 0
 
     for epoch in range(options.epochs):
-        log_string('**' * 40)
+        log_string('**' * 30)
         log_string('Training Epoch %03d, Learning Rate %g' % (epoch + 1, optimizer.param_groups[0]['lr']))
         net.train()
 
@@ -48,14 +87,14 @@ def train():
         targets, outputs = [], []
 
         for batch_id, (data, target) in enumerate(train_loader):
-            len_batch = len(data)
             global_step += 1
-
-            # Reshape stacks into batch, [options.batchsize * options.stack_size, 3, options.img_h, options.img_w]
-            data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
 
             data = data.cuda()
             target = target.cuda()
+
+            # Min-max scaling
+            # for i in range(len(data)):
+            #     data[i] = (data[i] - data[i].min()) / (data[i].max() - data[i].min())  # Min-max scaling
 
             # Extra classifier transforms
             data = classifier_transforms(data)
@@ -85,7 +124,7 @@ def train():
                 targets, outputs = [], []
 
             if (batch_id + 1) % options.val_freq == 0:
-                log_string('--' * 40)
+                log_string('--' * 30)
                 log_string('Evaluating at step #{}'.format(global_step))
                 best_loss, best_acc = evaluate(best_loss=best_loss, best_acc=best_acc, global_step=global_step)
                 net.train()
@@ -94,38 +133,23 @@ def train():
 def evaluate(**kwargs):
     best_loss = kwargs['best_loss']
     best_acc = kwargs['best_acc']
-    # global_step = kwargs['global_step']
+    global_step = kwargs['global_step']
 
     net.eval()
-
+    test_loss = 0
+    targets, outputs = [], []
     with torch.no_grad():
-        net_out = []
-        net_loss = []
-        for _ in range(options.val_iters):
-            test_loss = 0
-            targets, outputs = [], []
-            for batch_id, (data, target) in enumerate(test_loader):
-                len_batch = len(data)
-                data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
-                data, target = data.cuda(), target.cuda()
-                output = net(data)
-                batch_loss = criterion(output, target)
-                targets += [target]
-                outputs += [output]
-                test_loss += batch_loss
-            net_out += [torch.cat(outputs)]
-            net_loss += [test_loss]
+        for batch_id, (data, target) in enumerate(test_loader):
+            data, target = data.cuda(), target.cuda()
+            output = net(data)
+            batch_loss = criterion(output, target)
+            targets += [target]
+            outputs += [output]
+            test_loss += batch_loss
 
-        out_mean = torch.stack(net_out, dim=0).sum(dim=0)
-        loss_mean = torch.stack(net_loss, dim=0).sum(dim=0)
-
-        # Before the addition of stochastic testing
-        # test_loss /= len(test_loader)
-        # test_acc = compute_accuracy(torch.cat(targets), torch.cat(outputs))
-
-        test_loss = (loss_mean / (len(test_loader) * options.val_iters))
-        test_acc = compute_accuracy(torch.cat(targets), out_mean)
-        # scheduler.step(test_loss)
+        test_loss /= (batch_id + 1)
+        test_acc = compute_accuracy(torch.cat(targets), torch.cat(outputs))
+        scheduler.step(test_loss)
 
         # check for improvement
         loss_str, acc_str = '', ''
@@ -139,10 +163,10 @@ def evaluate(**kwargs):
                    .format(test_loss, loss_str, test_acc, acc_str))
 
         # write to TensorBoard
-        # info = {'loss': test_loss,
-        #         'accuracy': test_acc}
-        # for tag, value in info.items():
-        #     test_logger.scalar_summary(tag, value, global_step)
+        info = {'loss': test_loss,
+                'accuracy': test_acc}
+        for tag, value in info.items():
+            test_logger.scalar_summary(tag, value, global_step)
 
         # save checkpoint model
         """
@@ -159,7 +183,7 @@ def evaluate(**kwargs):
             save_path)
         log_string('Model saved at: {}'.format(save_path))
         """
-        log_string('--' * 40)
+        log_string('--' * 30)
         return best_loss, best_acc
 
 
@@ -187,8 +211,8 @@ if __name__ == '__main__':
     # backup of model def
     os.system('cp {}/models/densenet.py {}'.format(BASE_DIR, save_dir))
     # backup of train procedure
-    os.system('cp {}/train.py {}'.format(BASE_DIR, save_dir))
-    os.system('cp {}/MICCAIDataset.py {}'.format(BASE_DIR, save_dir))
+    os.system('cp {}/train_classifier.py {}'.format(BASE_DIR, save_dir))
+    os.system('cp {}/AMRDataset.py {}'.format(BASE_DIR, save_dir))
 
     ##################################
     # Creating the classifier model
@@ -206,10 +230,6 @@ if __name__ == '__main__':
     elif options.classifier_model == 'densenet':
         net = densenet.densenet121(pretrained=True, drop_rate=0.2)
         net.classifier = nn.Linear(net.classifier.in_features, out_features=options.num_classes)
-    elif options.classifier_model == 'morphset':
-        enc = resnet.resnet50(pretrained=True)
-        enc = nn.Sequential(*(list(enc.children())[:-2]))
-        net = MorphSet(options.img_c, options.num_classes, enc)
 
     log_string('{} model Generated.'.format(options.classifier_model))
     log_string("Number of trainable parameters: {}".format(sum(param.numel() for param in net.parameters())))
@@ -244,10 +264,10 @@ if __name__ == '__main__':
     # Load dataset
     ##################################
 
-    train_dataset = MICCAIDataset(mode='train', input_size=(options.img_h, options.img_w))
+    train_dataset = AMRDataset(mode='train', input_size=(options.img_h, options.img_w), LOG_FOUT=LOG_FOUT)
     train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
                               shuffle=True, num_workers=options.num_workers, drop_last=False)
-    test_dataset = MICCAIDataset(mode='val', input_size=(options.img_h, options.img_w))
+    test_dataset = AMRDataset(mode='test', input_size=(options.img_h, options.img_w), LOG_FOUT=LOG_FOUT)
     test_loader = DataLoader(test_dataset, batch_size=options.batch_size,
                              shuffle=False, num_workers=options.num_workers, drop_last=False)
 
@@ -261,3 +281,4 @@ if __name__ == '__main__':
     test_logger = Logger(os.path.join(logs_dir, 'test'))
 
     train()
+

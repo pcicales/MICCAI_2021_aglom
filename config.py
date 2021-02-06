@@ -8,7 +8,7 @@ parser.add_option("--mode", dest="mode", default="train",
                   help="set to train or eval")
 parser.add_option("--cuda", dest="cuda", type='int', default=1,
                   help="set it to 1 for running on GPU, 0 for CPU")
-parser.add_option("--gpu-used", dest="gpu_used", type='str', default='2',
+parser.add_option("--gpu-used", dest="gpu_used", type='str', default='1',
                   help="set gpu number to use for training (default 0)")
 
 # Style data augmentation
@@ -41,7 +41,7 @@ parser.add_option("--classifier-weight", dest='classifier_weight', type='float',
                   help="weight for classifier loss, default is 1")
 parser.add_option("--seed", dest='seed', type='int', default=42,
                   help="random seed for training, default is 42")
-parser.add_option("--lr", dest='lr', type='float', default=1e-3,
+parser.add_option("--lr", dest='lr', type='float', default=1e-4,
                   help="learning rate, default is 1e-3")
 
 # Optimizer options
@@ -73,15 +73,17 @@ parser.add_option('--enc', '--enc', dest='encoder', default='resnet50', type='st
                   help='Which encoder to use prior to the setformer.')
 parser.add_option('--posc', '--posc', dest='postset_channels', default=512, type='int',
                   help='The number of channels after the set operations.')
+parser.add_option('--vi', '--vi', dest='val_iters', default=10, type='int',
+                  help='The number of times we repeat val to produce our final labels.')
 
 
 
 # Dataset
 parser.add_option("--dataset", dest='dataset',
-                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/",
+                  default="/home/cougarnet.uh.edu/sdpatiba/Desktop/ABMR_dataset/AMR_raw_gloms/",
                   help="path to dataset")
 parser.add_option("--dtf", dest='data_folds',
-                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/ABMR_dataset/folds/",
+                  default="/home/cougarnet.uh.edu/sdpatiba/Desktop/MICCAI_2021_aglom/folds_npz/",
                   help="path to npz fold files")
 parser.add_option('--loo', '--loo', dest='test_fold_val', default=0, type='int',
                   help='Testing Fold (default 0)')
@@ -90,7 +92,7 @@ parser.add_option('--loo', '--loo', dest='test_fold_val', default=0, type='int',
 parser.add_option("--save-dir", dest='save_dir', default='./save',
                   help='saving directory of training information (default: ./save/combined)')
 parser.add_option('--classifier-load_model_path', dest='classifier_load_model_path',
-                  default='/home/cougarnet.uh.edu/srizvi7/Desktop/AMR_style_transfer_project/'
+                  default='/home/cougarnet.uh.edu/sdpatiba/Desktop/AMR_style_transfer_project/'
                           'save/classifier/20201212_182753/models/5143.ckpt',
                   help='path to load a .ckpt model')
 
