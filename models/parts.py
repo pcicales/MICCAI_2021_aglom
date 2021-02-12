@@ -19,7 +19,7 @@ class Convk1(nn.Module):
     def forward(self, x):
         return self.conv(x)
 
-class Out(nn.Module): # Todo: add SE to linear layers
+class Out(nn.Module):
     """output class values"""
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -27,11 +27,9 @@ class Out(nn.Module): # Todo: add SE to linear layers
             nn.Linear(in_channels, in_channels // 2),
             nn.BatchNorm1d(in_channels // 2),
             nn.ReLU(inplace=True),
-            # SE_Block(in_channels // 2),
             nn.Linear(in_channels // 2, in_channels // 4),
             nn.BatchNorm1d(in_channels // 4),
             nn.ReLU(inplace=True),
-            # SE_Block(in_channels // 4),
             nn.Linear(in_channels // 4, out_channels)
         )
 

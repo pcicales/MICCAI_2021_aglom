@@ -11,6 +11,7 @@ from torchvision import transforms
 import torch.backends.cudnn as cudnn
 
 from models import *
+from efficientnet_pytorch import EfficientNet
 from utils.eval_utils import compute_accuracy
 from utils.logger_utils import Logger
 from config import options
@@ -207,8 +208,17 @@ if __name__ == '__main__':
         net = densenet.densenet121(pretrained=True, drop_rate=0.2)
         net.classifier = nn.Linear(net.classifier.in_features, out_features=options.num_classes)
     elif options.classifier_model == 'morphset':
-        enc = resnet.resnet50(pretrained=True)
-        enc = nn.Sequential(*(list(enc.children())[:-2]))
+        if options.encoder == 'resnet50':
+            enc = resnet.resnet50(pretrained=True)
+            enc = nn.Sequential(*(list(enc.children())[:-2]))
+        elif 'efficientnet' in options.encoder:
+            enc = EfficientNet.from_pretrained(options.encoder, include_top=False)
+            a = list(enc.children())[0]
+            b = list(enc.children())[1]
+            c = list(enc.children())[2]
+            cx = nn.Sequential(*list(c.children()))
+            d = list(enc.children())[3]
+            enc = nn.Sequential(*[a, b, cx, d])
         net = MorphSet(options.img_c, options.num_classes, enc)
 
     log_string('{} model Generated.'.format(options.classifier_model))
