@@ -212,13 +212,14 @@ if __name__ == '__main__':
             enc = resnet.resnet50(pretrained=True)
             enc = nn.Sequential(*(list(enc.children())[:-2]))
         elif 'efficientnet' in options.encoder:
-            enc = EfficientNet.from_pretrained(options.encoder, include_top=False)
+            enc = EfficientNet.from_pretrained(options.encoder, include_top=True)
             a = list(enc.children())[0]
             b = list(enc.children())[1]
             c = list(enc.children())[2]
             cx = nn.Sequential(*list(c.children()))
             d = list(enc.children())[3]
-            enc = nn.Sequential(*[a, b, cx, d])
+            e = list(enc.children())[4]
+            enc = nn.Sequential(*[a, b, cx, d, e])
         net = MorphSet(options.img_c, options.num_classes, enc)
 
     log_string('{} model Generated.'.format(options.classifier_model))
@@ -241,11 +242,11 @@ if __name__ == '__main__':
     ##################################
     criterion = nn.CrossEntropyLoss()  # Good for classification problems with distributions of output classes
     if options.single_optimizer == "Adam":
-        optimizer = Adam(net.parameters(), lr=options.lr)
+        optimizer = Adam(net.parameters(), lr=options.lr, weight_decay=0.01)
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if options.num_classes > 1 else 'max',
                                                          factor=0.5, patience=100)
     elif options.single_optimizer == "SGD":
-        optimizer = SGD(net.parameters(), lr=options.lr)
+        optimizer = SGD(net.parameters(), lr=options.lr, weight_decay=0.01)
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if options.num_classes > 1 else 'max',
                                                          factor=0.5, patience=100)
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.9)

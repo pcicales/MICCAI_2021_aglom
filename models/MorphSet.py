@@ -17,7 +17,13 @@ class MorphSet(nn.Module):
 
         if options.encoder == 'resnet50':
             self.inchans = 2048
-        if options.encoder == 'efficientnet-b3':
+        elif options.encoder == 'efficientnet-b0':
+            self.inchans = 1280
+        elif options.encoder == 'efficientnet-b1':
+            self.inchans = 1280
+        elif options.encoder == 'efficientnet-b2':
+            self.inchans = 1408
+        elif options.encoder == 'efficientnet-b3':
             self.inchans = 1536
 
         self.enc = enc

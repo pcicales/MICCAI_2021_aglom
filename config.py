@@ -20,7 +20,7 @@ parser.add_option('--style-ref_src', dest='style_ref_src', default='init', type=
 # Train options
 parser.add_option("--epochs", dest='epochs', type='int', default=500,
                   help="number of training epochs, default is 100")
-parser.add_option("--batch-size", dest='batch_size', type='int', default=3,
+parser.add_option("--batch-size", dest='batch_size', type='int', default=4,
                   help="batch size for training, default is 16. Must be <= num_styles for combined model")
 
 parser.add_option("--mix-styles", dest='mix_styles', type='int', default=1,
@@ -84,7 +84,7 @@ parser.add_option("--dataset", dest='dataset',
 parser.add_option("--dtf", dest='data_folds',
                   default="/home/cougarnet.uh.edu/pcicales/Documents/data/ABMR_dataset/folds/",
                   help="path to npz fold files")
-parser.add_option('--loo', '--loo', dest='test_fold_val', default=3, type='int',
+parser.add_option('--loo', '--loo', dest='test_fold_val', default=2, type='int',
                   help='Testing Fold (default 0)')
 
 # Directories
@@ -96,9 +96,9 @@ parser.add_option('--classifier-load_model_path', dest='classifier_load_model_pa
                   help='path to load a .ckpt model')
 
 # Log and Validation Intervals/Frequencies
-parser.add_option("--log-interval", dest='log_interval', type='int', default=10,
+parser.add_option("--log-interval", dest='log_interval', type='int', default=5,
                   help="number of images after which all losses are logged, default is 40")
-parser.add_option('--vf', '--val_freq', dest='val_freq', default=20, type='int',
+parser.add_option('--vf', '--val_freq', dest='val_freq', default=10, type='int',
                   help='run validation for each <val_freq> iterations (default: 200)')
 
 # Classifier Options
