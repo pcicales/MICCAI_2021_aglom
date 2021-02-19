@@ -54,9 +54,9 @@ def train():
 
             # Reshape stacks into batch, [options.batchsize * options.stack_size, 3, options.img_h, options.img_w]
             data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
-
-            data = data.cuda()
-            target = target.cuda()
+            if options.cuda:
+                data = data.cuda()
+                target = target.cuda()
 
             # Extra classifier transforms
             data = classifier_transforms(data)
@@ -95,7 +95,7 @@ def train():
 def evaluate(**kwargs):
     best_loss = kwargs['best_loss']
     best_acc = kwargs['best_acc']
-    # global_step = kwargs['global_step']
+    global_step = kwargs['global_step']
 
     net.eval()
 
@@ -108,7 +108,8 @@ def evaluate(**kwargs):
             for batch_id, (data, target) in enumerate(test_loader):
                 len_batch = len(data)
                 data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
-                data, target = data.cuda(), target.cuda()
+                if options.cuda:
+                    data, target = data.cuda(), target.cuda()
                 output = net(data)
                 batch_loss = criterion(output, target)
                 targets += [target]
@@ -140,13 +141,12 @@ def evaluate(**kwargs):
                    .format(test_loss, loss_str, test_acc, acc_str))
 
         # write to TensorBoard
-        # info = {'loss': test_loss,
-        #         'accuracy': test_acc}
-        # for tag, value in info.items():
-        #     test_logger.scalar_summary(tag, value, global_step)
+        info = {'loss': test_loss,
+                'accuracy': test_acc}
+        for tag, value in info.items():
+            test_logger.scalar_summary(tag, value, global_step)
 
         # save checkpoint model
-        """
         state_dict = net.state_dict()
         for key in state_dict.keys():
             state_dict[key] = state_dict[key].cpu()
@@ -159,7 +159,6 @@ def evaluate(**kwargs):
             'state_dict': state_dict},
             save_path)
         log_string('Model saved at: {}'.format(save_path))
-        """
         log_string('--' * 40)
         return best_loss, best_acc
 
@@ -234,9 +233,10 @@ if __name__ == '__main__':
     ##################################
     # Use cuda
     ##################################
-    cudnn.benchmark = True
-    net.cuda()
-    net = nn.DataParallel(net)
+    if options.cuda:
+        cudnn.benchmark = True
+        net.cuda()
+        net = nn.DataParallel(net)
     ##################################
     # Loss and Optimizer
     ##################################

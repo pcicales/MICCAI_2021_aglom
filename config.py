@@ -79,10 +79,10 @@ parser.add_option('--vi', '--vi', dest='val_iters', default=10, type='int',
 
 # Dataset
 parser.add_option("--dataset", dest='dataset',
-                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/ABMR_dataset/AMR_raw_gloms/",
+                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/HULA/ABMR_dataset/AMR_raw_gloms/",
                   help="path to dataset")
 parser.add_option("--dtf", dest='data_folds',
-                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/ABMR_dataset/folds/",
+                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/HULA/ABMR_dataset/folds/",
                   help="path to npz fold files")
 parser.add_option('--loo', '--loo', dest='test_fold_val', default=2, type='int',
                   help='Testing Fold (default 0)')
