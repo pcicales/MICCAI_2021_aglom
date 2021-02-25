@@ -3,7 +3,6 @@ import random
 import numpy as np
 import pandas as pd
 
-
 GLOM_PATH = '/home/cougarnet.uh.edu/srizvi7/Desktop/ABMR_dataset/AMR_raw_gloms/'
 ALL_IMG = glob.glob(GLOM_PATH + '*.jpg')
 SLIDE_ID = [''] * len(ALL_IMG)

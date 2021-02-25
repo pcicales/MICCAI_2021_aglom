@@ -1,7 +1,7 @@
 import os
 import PIL
 from datetime import datetime
-from MICCAIDataset import MICCAIDataset
+from ABMR_dataloader import ABMR_Dataset
 import torch
 import torch.nn as nn
 from torch import optim
@@ -19,7 +19,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 os.environ['CUDA_VISIBLE_DEVICES'] = "{}".format(options.gpu_used)
-
 
 def log_string(out_str):
     LOG_FOUT.write(out_str + '\n')
@@ -188,7 +187,7 @@ if __name__ == '__main__':
     os.system('cp {}/models/densenet.py {}'.format(BASE_DIR, save_dir))
     # backup of train procedure
     os.system('cp {}/train.py {}'.format(BASE_DIR, save_dir))
-    os.system('cp {}/MICCAIDataset.py {}'.format(BASE_DIR, save_dir))
+    os.system('cp {}/ABMR_dataloader.py {}'.format(BASE_DIR, save_dir))
 
     ##################################
     # Creating the classifier model
@@ -254,13 +253,20 @@ if __name__ == '__main__':
     ##################################
     # Load dataset
     ##################################
-
-    train_dataset = MICCAIDataset(mode='train', input_size=(options.img_h, options.img_w))
-    train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
-                              shuffle=True, num_workers=options.num_workers, drop_last=False)
-    test_dataset = MICCAIDataset(mode='val', input_size=(options.img_h, options.img_w))
-    test_loader = DataLoader(test_dataset, batch_size=options.batch_size,
-                             shuffle=False, num_workers=options.num_workers, drop_last=False)
+    if options.dataset == 'ABMR':
+        train_dataset = ABMR_Dataset(mode='train', input_size=(options.img_h, options.img_w))
+        train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
+                                  shuffle=True, num_workers=options.num_workers, drop_last=False)
+        test_dataset = ABMR_Dataset(mode='val', input_size=(options.img_h, options.img_w))
+        test_loader = DataLoader(test_dataset, batch_size=options.batch_size,
+                                 shuffle=False, num_workers=options.num_workers, drop_last=False)
+    elif options.dataset == 'Szeged_GN':
+        train_dataset = ABMR_Dataset(mode='train', input_size=(options.img_h, options.img_w))
+        train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
+                                  shuffle=True, num_workers=options.num_workers, drop_last=False)
+        test_dataset = ABMR_Dataset(mode='val', input_size=(options.img_h, options.img_w))
+        test_loader = DataLoader(test_dataset, batch_size=options.batch_size,
+                                 shuffle=False, num_workers=options.num_workers, drop_last=False)
 
     ##################################
     # TRAINING

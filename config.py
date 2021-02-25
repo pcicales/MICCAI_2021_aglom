@@ -8,7 +8,7 @@ parser.add_option("--mode", dest="mode", default="train",
                   help="set to train or eval")
 parser.add_option("--cuda", dest="cuda", type='int', default=1,
                   help="set it to 1 for running on GPU, 0 for CPU")
-parser.add_option("--gpu-used", dest="gpu_used", type='str', default='2',
+parser.add_option("--gpu-used", dest="gpu_used", type='str', default='1',
                   help="set gpu number to use for training (default 0)")
 
 # Style data augmentation
@@ -66,7 +66,7 @@ parser.add_option('--num_classes', dest='num_classes', default=2, type='int',
 parser.add_option('--hea', '--heads', dest='heads', default=1, type='int',
                   help='The number of attention heads in the set operations.')
 parser.add_option('--enc', '--enc', dest='encoder', default='efficientnet-b3', type='str',
-                  help='The feature encoder prior to our setformer operation (default: efficientnet-b7)')
+                  help='The feature encoder prior to our setformer operation (default: efficientnet-b3)')
 parser.add_option('--prsc', '--prsc', dest='preset_channels', default=256, type='int',
                   help='The number of channels prior to the set operations, must have a perfect root.')
 parser.add_option('--sp', '--sp', dest='set_points', default=8, type='int',
@@ -78,16 +78,13 @@ parser.add_option('--vi', '--vi', dest='val_iters', default=10, type='int',
 
 
 # Dataset
-parser.add_option("--dataset", dest='dataset',
-                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/HULA/ABMR_dataset/",
-                  help="path to dataset")
-parser.add_option("--datamode", dest='datamode',
-                  default=1, type='int',
+parser.add_option("--dataset_dir", dest='dataset_dir', default="/home/cougarnet.uh.edu/pcicales/Documents/data",
+                  help="path to dataset directory")
+parser.add_option("--dataset", dest='dataset', default="ABMR",
+                  help="desired dataset for training")
+parser.add_option("--datamode", dest='datamode', default=0, type='int',
                   help="Input data mode (default: 1, for mixed, 0 for raw")
-parser.add_option("--dtf", dest='data_folds',
-                  default="/home/cougarnet.uh.edu/pcicales/Documents/data/HULA/ABMR_dataset/folds/",
-                  help="path to npz fold files")
-parser.add_option('--loo', '--loo', dest='test_fold_val', default=2, type='int',
+parser.add_option('--loo', '--loo', dest='test_fold_val', default=4, type='int',
                   help='Testing Fold (default 0)')
 
 # Directories

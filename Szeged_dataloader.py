@@ -6,24 +6,24 @@ from config import options
 from torch.utils.data import Dataset
 from PIL import Image
 import numpy as np
-
 import warnings
+
 warnings.filterwarnings("ignore")
 os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(options.gpu_used)
 device = torch.device("cuda" if options.cuda else "cpu")
 
-
-class MICCAIDataset(Dataset):
+class Szeged_Dataset(Dataset):
     def __init__(self, mode="train", input_size=(options.img_w, options.img_h)):
         # self.imgs_dir = options.dataset  # Path to AMR dataset
         if options.datamode:
-            self.imgs_dir = options.dataset + 'multi/'
+            self.imgs_dir = options.dataset + '/HULA/ABMR_dataset/multi/'
         else:
-            self.imgs_dir = options.dataset + 'AMR_raw_gloms/'
+            self.imgs_dir = options.dataset + '/HULA/ABMR_dataset/AMR_raw_gloms/'
         self.mode = mode
         self.input_size = input_size
         self.label_code = {"Non-AMR": 0, "AMR": 1, "Inconclusive": 2, "None": 3}
         self.patients = {}
+        self.folds = options.dataset + '/HULA/ABMR_dataset/folds/'
 
         glom_files = []
 
@@ -31,10 +31,10 @@ class MICCAIDataset(Dataset):
             set = list(range(5))
             set.remove(options.test_fold_val)
             for i in set:
-                glom_files = glom_files + np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
+                glom_files = glom_files + np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
             print('Training on 4 folds, image count:', len(glom_files))
         elif self.mode == "val":
-            glom_files = np.load(options.data_folds + 'amr_fold{}.npz'.format(options.test_fold_val))['FILES'].tolist()
+            glom_files = np.load(self.folds + 'amr_fold{}.npz'.format(options.test_fold_val))['FILES'].tolist()
             print("Testing image count:", len(glom_files))
 
         # Create patient dictionary
