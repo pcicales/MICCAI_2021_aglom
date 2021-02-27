@@ -1,12 +1,15 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-# from sklearn.metrics import confusion_matrix
 # from sklearn.utils.multiclass import unique_labels
 import os
 
+def get_binary_accuracy(y_true, y_prob):
+    assert y_true.ndim == 1 and y_true.size() == y_prob.size()
+    y_prob = y_prob > 0.5
+    return (y_true == y_prob).sum().item() / y_true.size(0)
 
-def compute_accuracy(target, output):
+def compute_accuracy(target, output, classes):
     """
      Calculates the classification accuracy.
     :param target: Tensor of correct labels of size [batch_size]
@@ -14,8 +17,11 @@ def compute_accuracy(target, output):
     :return: prediction accuracy
     """
     num_samples = target.size(0)
-    num_correct = torch.sum(target == torch.argmax(output, dim=1))
-    accuracy = num_correct.float() / num_samples
+    if classes == 2:
+        accuracy = get_binary_accuracy(target, output.squeeze(1))
+    else:
+        num_correct = torch.sum(target == torch.argmax(output, dim=1))
+        accuracy = num_correct.float() / num_samples
     return accuracy
 
 def mutual_info(mc_prob):

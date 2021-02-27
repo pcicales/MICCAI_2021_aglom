@@ -69,6 +69,7 @@ class ABMR_Dataset(Dataset):
         if len(existing_patient_images) < options.stack_size:
             # Take all existing images, shuffle to randomize order
             random.shuffle(existing_patient_images)
+
             for img_name in existing_patient_images:
                 if options.datamode:
                     matching = [s for s in full_files if img_name[:-4] in s]
@@ -76,19 +77,23 @@ class ABMR_Dataset(Dataset):
                 else:
                     img = Image.open(self.imgs_dir + img_name)
                 img = transforms.ToTensor()(img)
-                img = (img - img.min()) / (img.max() - img.min())
+
                 if self.mode == 'train':
                     # normalization & augmentation
                     img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+                    img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
                     img = transforms.RandomHorizontalFlip()(img)
                     img = transforms.RandomVerticalFlip()(img)
-                    # Classifier transforms in main script...
+                    img = transforms.RandomResizedCrop(options.img_h, scale=(0.7, 1.))(img)
+                    img = transforms.RandomRotation(90, fill=(0,))(img)  # resample=PIL.Image.BICUBIC
 
                 if self.mode == 'val':
                     img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+                    img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
                 if self.mode == 'test':
                     img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+                    img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
                 patient_samples.append(img)
 
@@ -103,20 +108,23 @@ class ABMR_Dataset(Dataset):
                 else:
                     img = Image.open(self.imgs_dir + file_name)
                 img = transforms.ToTensor()(img)
-                img = (img - img.min()) / (img.max() - img.min())
 
                 if self.mode == 'train':
                     # normalization & augmentation
                     img = transforms.Resize(self.input_size, Image.BILINEAR)(img)  # Bilinear resizing?
+                    img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
                     img = transforms.RandomHorizontalFlip()(img)
                     img = transforms.RandomVerticalFlip()(img)
-                    # Classifier transforms in main script...
+                    img = transforms.RandomResizedCrop(options.img_h, scale=(0.7, 1.))(img)
+                    img = transforms.RandomRotation(90, fill=(0,))(img)  # resample=PIL.Image.BICUBIC
 
                 if self.mode == 'val':
                     img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+                    img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
                 if self.mode == 'test':
                     img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+                    img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
                 patient_samples.append(img)
         else:
@@ -148,6 +156,7 @@ class ABMR_Dataset(Dataset):
 
                 if self.mode == 'test':
                     img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+
                 patient_samples.append(img)
 
         return torch.stack(patient_samples, dim=0), self.label_code[target_label]

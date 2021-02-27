@@ -57,12 +57,12 @@ def train():
                 data = data.cuda()
                 target = target.cuda()
 
-            # Extra classifier transforms
-            data = classifier_transforms(data)
-
             # Forward pass
             output = net(data)
-            batch_loss = criterion(output, target)
+            if options.num_classes == 2:
+                batch_loss = criterion(output, target.type_as(output).unsqueeze(1))
+            else:
+                batch_loss = criterion(output, target)
             targets += [target]
             outputs += [output]
             train_loss += batch_loss.item()
@@ -74,7 +74,7 @@ def train():
 
             if (batch_id + 1) % options.log_interval == 0:
                 train_loss /= options.log_interval
-                train_acc = compute_accuracy(torch.cat(targets), torch.cat(outputs))
+                train_acc = compute_accuracy(torch.cat(targets), torch.cat(outputs), options.num_classes)
                 log_string("epoch: {0}, step: {1}, train_loss: {2:.4f} train_accuracy: {3:.02%}"
                            .format(epoch+1, batch_id+1, train_loss, train_acc))
                 info = {'loss': train_loss,
@@ -110,7 +110,10 @@ def evaluate(**kwargs):
                 if options.cuda:
                     data, target = data.cuda(), target.cuda()
                 output = net(data)
-                batch_loss = criterion(output, target)
+                if options.num_classes == 2:
+                    batch_loss = criterion(output, target.type_as(output).unsqueeze(1))
+                else:
+                    batch_loss = criterion(output, target)
                 targets += [target]
                 outputs += [output]
                 test_loss += batch_loss
@@ -122,10 +125,10 @@ def evaluate(**kwargs):
 
         # Before the addition of stochastic testing
         # test_loss /= len(test_loader)
-        # test_acc = compute_accuracy(torch.cat(targets), torch.cat(outputs))
+        # test_acc = compute_accuracy(torch.cat(targets), torch.cat(outputs), options.num_classes)
 
         test_loss = (loss_mean / (len(test_loader) * options.val_iters))
-        test_acc = compute_accuracy(torch.cat(targets), out_mean)
+        test_acc = compute_accuracy(torch.cat(targets), out_mean, options.num_classes)
         # scheduler.step(test_loss)
 
         # check for improvement
@@ -223,12 +226,6 @@ if __name__ == '__main__':
     log_string('{} model Generated.'.format(options.classifier_model))
     log_string("Number of trainable parameters: {}".format(sum(param.numel() for param in net.parameters())))
 
-    classifier_transforms = transforms.Compose([
-        transforms.RandomResizedCrop(options.img_h, scale=(0.7, 1.)),
-        transforms.RandomRotation(90, fill=(0,)),  # resample=PIL.Image.BICUBIC
-        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-
     ##################################
     # Use cuda
     ##################################
@@ -239,7 +236,10 @@ if __name__ == '__main__':
     ##################################
     # Loss and Optimizer
     ##################################
-    criterion = nn.CrossEntropyLoss()  # Good for classification problems with distributions of output classes
+    if options.num_classes == 2:
+        criterion = nn.BCEWithLogitsLoss()
+    else:
+        criterion = nn.CrossEntropyLoss()
     if options.single_optimizer == "Adam":
         optimizer = Adam(net.parameters(), lr=options.lr, weight_decay=0.01)
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min' if options.num_classes > 1 else 'max',

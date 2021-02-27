@@ -37,8 +37,12 @@ class MorphSet(nn.Module):
                               out_channels=options.postset_channels)
         self.SE4 = SE_Block(options.postset_channels)
         self.fpool = nn.AdaptiveAvgPool2d(1)
-        self.classifier = Out(in_channels=options.postset_channels * options.stack_size,
-                              out_channels=options.num_classes)
+        if options.num_classes == 2:
+            self.classifier = Out(in_channels=options.postset_channels * options.stack_size,
+                              out_channels=1)
+        else:
+            self.classifier = Out(in_channels=options.postset_channels * options.stack_size,
+                                  out_channels=options.num_classes)
 
     def forward(self, x):
         x = self.enc(x)

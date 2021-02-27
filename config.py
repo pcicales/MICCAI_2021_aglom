@@ -20,7 +20,7 @@ parser.add_option('--style-ref_src', dest='style_ref_src', default='init', type=
 # Train options
 parser.add_option("--epochs", dest='epochs', type='int', default=500,
                   help="number of training epochs, default is 100")
-parser.add_option("--batch-size", dest='batch_size', type='int', default=4,
+parser.add_option("--batch-size", dest='batch_size', type='int', default=3,
                   help="batch size for training, default is 16. Must be <= num_styles for combined model")
 
 parser.add_option("--mix-styles", dest='mix_styles', type='int', default=1,
@@ -29,7 +29,7 @@ parser.add_option("--style-entropy", dest='style_entropy', type='int', default=0
                   help="whether or not to initialize as normal distribution instead of all ones")
 
 # Weights and Hyperparameters
-parser.add_option("--stack-size", dest='stack_size', type='int', default=8,
+parser.add_option("--stack-size", dest='stack_size', type='int', default=12,
                   help="number of images sampled from one patient")
 parser.add_option("--num-styles", dest='num_styles', type='int', default=27,
                   help="number of style images used during training, default is 12")
@@ -73,7 +73,7 @@ parser.add_option('--sp', '--sp', dest='set_points', default=8, type='int',
                   help='The number of unique points (or seeds), morphological appearances.')
 parser.add_option('--posc', '--posc', dest='postset_channels', default=512, type='int',
                   help='The number of channels after the set operations.')
-parser.add_option('--vi', '--vi', dest='val_iters', default=10, type='int',
+parser.add_option('--vi', '--vi', dest='val_iters', default=50, type='int',
                   help='The number of times we repeat val to produce our final labels.')
 
 
@@ -98,7 +98,7 @@ parser.add_option('--classifier-load_model_path', dest='classifier_load_model_pa
 # Log and Validation Intervals/Frequencies
 parser.add_option("--log-interval", dest='log_interval', type='int', default=5,
                   help="number of images after which all losses are logged, default is 40")
-parser.add_option('--vf', '--val_freq', dest='val_freq', default=10, type='int',
+parser.add_option('--vf', '--val_freq', dest='val_freq', default=15, type='int',
                   help='run validation for each <val_freq> iterations (default: 200)')
 
 # Classifier Options
