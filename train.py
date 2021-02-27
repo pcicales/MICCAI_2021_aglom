@@ -33,7 +33,7 @@ def train():
     table.add_row(['Log/Checkpoint Files', save_dir])
     for i in range(len(list(options.__dict__.keys()))):
         if list(options.__dict__.keys())[i] == 'load_model_path':
-        continue
+            continue
     else:
         table.add_row([list(options.__dict__.keys())[i], str(list(options.__dict__.values())[i])])
         log_string(str(table))
