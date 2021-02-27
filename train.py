@@ -37,7 +37,6 @@ def train():
         else:
             table.add_row([list(options.__dict__.keys())[i], str(list(options.__dict__.values())[i])])
     log_string(str(table))
-    log_string('**' * 30)
 
     global_step = 0
     best_loss = 100
