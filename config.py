@@ -8,8 +8,10 @@ parser.add_option("--mode", dest="mode", default="train",
                   help="set to train or eval")
 parser.add_option("--cuda", dest="cuda", type='int', default=1,
                   help="set it to 1 for running on GPU, 0 for CPU")
-parser.add_option("--gpu-used", dest="gpu_used", type='str', default='0',
+parser.add_option("--gpu-used", dest="gpu_used", type='str', default='2',
                   help="set gpu number to use for training (default 0)")
+parser.add_option('--loo', '--loo', dest='test_fold_val', default=2, type='int',
+                  help='Testing Fold (default 0)')
 
 # Style data augmentation
 parser.add_option('--style-augm', dest='style_augm', default=1, type='int',
@@ -84,8 +86,7 @@ parser.add_option("--dataset", dest='dataset', default="ABMR",
                   help="desired dataset for training")
 parser.add_option("--datamode", dest='datamode', default=1, type='int',
                   help="Input data mode (default: 1, for mixed, 0 for raw")
-parser.add_option('--loo', '--loo', dest='test_fold_val', default=0, type='int',
-                  help='Testing Fold (default 0)')
+
 
 # Directories
 parser.add_option("--save-dir", dest='save_dir', default='./save',

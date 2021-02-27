@@ -34,18 +34,10 @@ def train():
     for i in range(len(list(options.__dict__.keys()))):
         if list(options.__dict__.keys())[i] == 'load_model_path':
             continue
-    else:
-        table.add_row([list(options.__dict__.keys())[i], str(list(options.__dict__.values())[i])])
-        log_string(str(table))
-
+        else:
+            table.add_row([list(options.__dict__.keys())[i], str(list(options.__dict__.values())[i])])
+    log_string(str(table))
     log_string('**' * 30)
-    log_string('Optimizer is ' + str(options.single_optimizer))
-    log_string('lr is ' + str(options.lr))
-    log_string('GPU Used: ' + str(options.gpu_used))
-    log_string('Label mode: ' + str(options.label_mode))
-    log_string('Native label num: ' + str(options.native_labels))
-    log_string('Num_classes: ' + str(options.num_classes))
-    log_string('Test fold val: ' + str(options.test_fold_val))
 
     global_step = 0
     best_loss = 100
