@@ -8,7 +8,7 @@ parser.add_option("--mode", dest="mode", default="train",
                   help="set to train or eval")
 parser.add_option("--cuda", dest="cuda", type='int', default=1,
                   help="set it to 1 for running on GPU, 0 for CPU")
-parser.add_option("--gpu-used", dest="gpu_used", type='str', default='1',
+parser.add_option("--gpu-used", dest="gpu_used", type='str', default='0',
                   help="set gpu number to use for training (default 0)")
 
 # Style data augmentation
@@ -58,7 +58,7 @@ parser.add_option('--lm', '--label-mode', dest='label_mode', default='cons', typ
 parser.add_option("--native_labels", dest='native_labels', default=1, type='int',
                   help="Weight of native labels (i.e. lab of origin labels, default = 1)")
 parser.add_option('--num_classes', dest='num_classes', default=2, type='int',
-                  help='number of classes to predict, 2 or 3 (default: 3)')
+                  help='number of classes to predict (default: 2)')
 
 ####################
 # MorphSet OPTIONS #
@@ -82,9 +82,9 @@ parser.add_option("--dataset_dir", dest='dataset_dir', default="/home/cougarnet.
                   help="path to dataset directory")
 parser.add_option("--dataset", dest='dataset', default="ABMR",
                   help="desired dataset for training")
-parser.add_option("--datamode", dest='datamode', default=0, type='int',
+parser.add_option("--datamode", dest='datamode', default=1, type='int',
                   help="Input data mode (default: 1, for mixed, 0 for raw")
-parser.add_option('--loo', '--loo', dest='test_fold_val', default=4, type='int',
+parser.add_option('--loo', '--loo', dest='test_fold_val', default=0, type='int',
                   help='Testing Fold (default 0)')
 
 # Directories
@@ -97,9 +97,9 @@ parser.add_option('--classifier-load_model_path', dest='classifier_load_model_pa
 
 # Log and Validation Intervals/Frequencies
 parser.add_option("--log-interval", dest='log_interval', type='int', default=5,
-                  help="number of images after which all losses are logged, default is 40")
-parser.add_option('--vf', '--val_freq', dest='val_freq', default=15, type='int',
-                  help='run validation for each <val_freq> iterations (default: 200)')
+                  help="number of images after which all losses are logged, default is 5")
+parser.add_option('--vf', '--val_freq', dest='val_freq', default=20, type='int',
+                  help='run validation for each <val_freq> iterations (default: 20)')
 
 # Classifier Options
 parser.add_option('--classifier-model', dest='classifier_model', default='morphset',

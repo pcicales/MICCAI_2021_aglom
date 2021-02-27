@@ -4,6 +4,7 @@ from datetime import datetime
 from ABMR_dataloader import ABMR_Dataset
 import torch
 import torch.nn as nn
+from prettytable import PrettyTable
 from torch import optim
 from torch.utils.data import DataLoader
 from torch.optim import Adam, SGD
@@ -25,8 +26,19 @@ def log_string(out_str):
     LOG_FOUT.flush()
     print(out_str)
 
-
 def train():
+    log_string('Training Initiated. Listing Training Configurations:')
+    table = PrettyTable(['Name', 'Value'])
+    table.add_row(['Parameters', sum(param.numel() for param in net.parameters())])
+    table.add_row(['Log/Checkpoint Files', save_dir])
+    for i in range(len(list(options.__dict__.keys()))):
+        if list(options.__dict__.keys())[i] == 'load_model_path':
+        continue
+    else:
+        table.add_row([list(options.__dict__.keys())[i], str(list(options.__dict__.values())[i])])
+        log_string(str(table))
+
+    log_string('**' * 30)
     log_string('Optimizer is ' + str(options.single_optimizer))
     log_string('lr is ' + str(options.lr))
     log_string('GPU Used: ' + str(options.gpu_used))
