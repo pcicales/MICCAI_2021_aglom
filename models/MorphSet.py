@@ -30,11 +30,15 @@ class MorphSet(nn.Module):
         self.SE1 = SE_Block(self.inchans)
         self.preset = Convk1(in_channels=self.inchans, out_channels=options.preset_channels)
         self.SE2 = SE_Block(options.preset_channels)
-        self.setformer = ConvSet(A=1, B=options.set_points, K=3, P=int(options.preset_channels**0.5),
-                                 stride=2, pad=1, heads=options.heads)
+        if options.ablation_mode == 'setformer':
+            self.setformer = ConvSet(A=1, B=options.set_points, K=3, P=int(options.preset_channels**0.5),
+                                    stride=2, pad=1, heads=options.heads)
+        else:
+            self.abl_conv = nn.Conv2d(in_channels=options.preset_channels, kernel_size=3, stride=2,
+                                  padding=1, out_channels=options.preset_channels * options.set_points)
         self.SE3 = SE_Block(options.preset_channels * options.set_points)
         self.postset = Convk1(in_channels=options.preset_channels * options.set_points,
-                              out_channels=options.postset_channels)
+                                 out_channels=options.postset_channels)
         self.SE4 = SE_Block(options.postset_channels)
         self.fpool = nn.AdaptiveAvgPool2d(1)
         if options.num_classes == 2:
@@ -50,7 +54,10 @@ class MorphSet(nn.Module):
         x = self.preset(x)
         x = self.SE2(x)
         # x.shape = b, c, h, w
-        x = self.setformer(x)
+        if options.ablation_mode == 'setformer':
+            x = self.setformer(x)
+        else:
+            x = self.abl_conv(x)
         x = self.SE3(x)
         # x.shape = b, c*set, h1, w1
         x = self.postset(x)

@@ -12,6 +12,8 @@ parser.add_option("--gpu-used", dest="gpu_used", type='str', default='3',
                   help="set gpu number to use for training (default 0)")
 parser.add_option('--loo', '--loo', dest='test_fold_val', default=2, type='int',
                   help='Testing Fold (default 0)')
+parser.add_option('--ablation_mode', '--ablation_mode', dest='ablation_mode', default='setformer', type='str',
+                  help='Ablation study, default: setformer, otherwise replaced with a convolution')
 
 # Style data augmentation
 parser.add_option('--style-augm', dest='style_augm', default=1, type='int',
