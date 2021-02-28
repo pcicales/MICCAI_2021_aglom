@@ -10,6 +10,7 @@ from config import options
 import seaborn as sns
 from utils.eval_utils import compute_accuracy
 import matplotlib.pyplot as plt
+import matplotlib
 
 def set_style():
     # This sets reasonable defaults for font size for
@@ -70,16 +71,23 @@ def test():
         patient_name_list = list(test_loader.dataset.patients.keys())
         for i in range(len(test_loader.dataset)):
             if patient_name_list[i][0] == 'A':
-                gt = 1
+                gt = 'ABMR'
             else:
-                gt = 0
-            model_prediction = out_mean[i]
+                gt = 'Non-ABMR'
+            if out_mean[i].item() > 0.5:
+                model_prediction = 'ABMR'
+            else:
+                model_prediction = 'Non-ABMR'
             prediction_var = torch.var(output_stack[i])
-            sns.kdeplot(x=output_stack[i].detach().cpu().numpy(), clip=[0, 1])
-            plt.title("GT: " + gt + ", Model Prediction: " + str(model_prediction.item()), ", Prob. Var.: " + prediction_var.item())
+            plt.style.use(['seaborn-white', 'seaborn-paper'])
+            sns.kdeplot(data=output_stack[i].detach().cpu().numpy(), clip=[0, 1], shade=True)
+            sns.set_palette('gist_heat')
+            plt.title("GT: " + gt + ", Prediction: " + model_prediction + ", Var: " + str(round(prediction_var.item(), 3)))
             plt.xlabel("ABMR Probability")
             plt.xlim(0, 1)
-            plt.savefig("./save/density_plots/density_plot_" + patient_name_list[i] + ".png")
+            ax = plt.gca()
+            ax.legend_ = None
+            plt.savefig("./save/density_plots/density_plot_" + patient_name_list[i] + ".png", dpi=300)
             plt.clf()
 
 
