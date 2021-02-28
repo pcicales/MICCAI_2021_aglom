@@ -8,7 +8,7 @@ parser.add_option("--mode", dest="mode", default="train",
                   help="set to train or eval")
 parser.add_option("--cuda", dest="cuda", type='int', default=1,
                   help="set it to 1 for running on GPU, 0 for CPU")
-parser.add_option("--gpu-used", dest="gpu_used", type='str', default='2',
+parser.add_option("--gpu-used", dest="gpu_used", type='str', default='3',
                   help="set gpu number to use for training (default 0)")
 parser.add_option('--loo', '--loo', dest='test_fold_val', default=2, type='int',
                   help='Testing Fold (default 0)')
@@ -24,6 +24,8 @@ parser.add_option("--epochs", dest='epochs', type='int', default=500,
                   help="number of training epochs, default is 100")
 parser.add_option("--batch-size", dest='batch_size', type='int', default=3,
                   help="batch size for training, default is 16. Must be <= num_styles for combined model")
+parser.add_option("--val_batch-size", dest='val_batch_size', type='int', default=12,
+                  help="batch size for testing, set to higher values for faster MC results.")
 
 parser.add_option("--mix-styles", dest='mix_styles', type='int', default=1,
                   help="whether or not to mix 3 styles 1")
@@ -75,7 +77,7 @@ parser.add_option('--sp', '--sp', dest='set_points', default=8, type='int',
                   help='The number of unique points (or seeds), morphological appearances.')
 parser.add_option('--posc', '--posc', dest='postset_channels', default=512, type='int',
                   help='The number of channels after the set operations.')
-parser.add_option('--vi', '--vi', dest='val_iters', default=50, type='int',
+parser.add_option('--vi', '--vi', dest='val_iters', default=100, type='int',
                   help='The number of times we repeat val to produce our final labels.')
 
 

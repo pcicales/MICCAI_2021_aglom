@@ -13,7 +13,7 @@ chardet @ file:///tmp/build/80754af9/chardet_1605303185383/work
 click @ file:///home/linux1/recipes/ci/click_1610990599742/work
 cryptography @ file:///tmp/build/80754af9/cryptography_1607635341180/work
 cycler==0.10.0
--e git+https://github.com/pcicales/MICCAI_2021_aglom.git@f4eb9a5b0f84eade1b10a421f485594acc984453#egg=efficientnet_pytorch&subdirectory=EfficientNet-PyTorch
+-e git+https://github.com/pcicales/MICCAI_2021_aglom.git@6060594ff6b8fb8594a45afadb85d6c8aef69ba0#egg=efficientnet_pytorch&subdirectory=EfficientNet-PyTorch
 gast==0.3.3
 google-auth @ file:///tmp/build/80754af9/google-auth_1607969906642/work
 google-auth-oauthlib @ file:///tmp/build/80754af9/google-auth-oauthlib_1603929124518/work
@@ -35,6 +35,7 @@ numpy @ file:///tmp/build/80754af9/numpy_and_numpy_base_1603570489231/work
 oauthlib==3.1.0
 olefile==0.46
 opt-einsum==3.1.0
+pandas==1.2.2
 Pillow @ file:///tmp/build/80754af9/pillow_1609786786540/work
 prettytable @ file:///home/conda/feedstock_root/build_artifacts/prettytable_1605348622459/work
 protobuf==3.14.0
@@ -46,11 +47,13 @@ pyOpenSSL @ file:///tmp/build/80754af9/pyopenssl_1608057966937/work
 pyparsing @ file:///home/linux1/recipes/ci/pyparsing_1610983426697/work
 PySocks @ file:///tmp/build/80754af9/pysocks_1605305779399/work
 python-dateutil @ file:///home/ktietz/src/ci/python-dateutil_1611928101742/work
+pytz @ file:///tmp/build/80754af9/pytz_1612215392582/work
 requests @ file:///tmp/build/80754af9/requests_1608241421344/work
 requests-oauthlib==1.3.0
 rsa @ file:///tmp/build/80754af9/rsa_1610483308194/work
 scikit-learn @ file:///tmp/build/80754af9/scikit-learn_1598376899566/work
 scipy @ file:///tmp/build/80754af9/scipy_1597686649129/work
+seaborn @ file:///tmp/build/80754af9/seaborn_1608578541026/work
 sip==4.19.13
 six @ file:///tmp/build/80754af9/six_1605205327372/work
 tensorboard @ file:///home/builder/ktietz/conda/conda-bld/tensorboard_1604313476433/work/tmp_pip_dir
