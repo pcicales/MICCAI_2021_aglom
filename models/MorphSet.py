@@ -10,10 +10,11 @@ from .parts import *
 # torch.split(x, 8)[0] == x.view(3, 8, 8192, 4, 4)[0]
 
 class MorphSet(nn.Module):
-    def __init__(self, n_channels, n_classes, enc):
+    def __init__(self, n_channels, n_classes, enc, mode):
         super(MorphSet, self).__init__()
         self.n_channels = n_channels
         self.n_classes = n_classes
+        self.mode = mode
 
         if options.encoder == 'resnet50':
             self.inchans = 2048
@@ -30,7 +31,7 @@ class MorphSet(nn.Module):
         self.SE1 = SE_Block(self.inchans)
         self.preset = Convk1(in_channels=self.inchans, out_channels=options.preset_channels)
         self.SE2 = SE_Block(options.preset_channels)
-        if options.ablation_mode == 'setformer':
+        if mode == 'setformer':
             self.setformer = ConvSet(A=1, B=options.set_points, K=3, P=int(options.preset_channels**0.5),
                                     stride=2, pad=1, heads=options.heads)
         else:
@@ -54,7 +55,7 @@ class MorphSet(nn.Module):
         x = self.preset(x)
         x = self.SE2(x)
         # x.shape = b, c, h, w
-        if options.ablation_mode == 'setformer':
+        if self.mode == 'setformer':
             x = self.setformer(x)
         else:
             x = self.abl_conv(x)

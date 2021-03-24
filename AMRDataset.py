@@ -8,14 +8,16 @@ from collections import Counter
 import random
 from utils.logger_utils import Logger
 import PIL
+import os
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
 def log_string(log_fout, out_str):
-    log_fout.write(out_str + '\n')
-    log_fout.flush()
+    if log_fout:
+        log_fout.write(out_str + '\n')
+        log_fout.flush()
     print(out_str)
 
 
@@ -47,14 +49,21 @@ def most_frequent(L):  # Can modify the order here depending on whether we prefe
 
 
 class AMRDataset(Dataset):
-    def __init__(self, mode="train", input_size=(256, 256), LOG_FOUT=None):  # Could have data_len parameter
-        self.imgs_dir = options.dataset  # Path to AMR dataset
+    def __init__(self, mode="train", input_size=(options.img_w, options.img_h), LOG_FOUT=None, test=0):  # Could have data_len parameter
+        if options.datamode:
+            self.imgs_dir = options.dataset_dir + '/HULA/ABMR_dataset/multi/'
+        else:
+            self.imgs_dir = options.dataset_dir + '/HULA/ABMR_dataset/AMR_raw_gloms/'
         self.mode = mode
         self.input_size = input_size
         self.label_mode = options.label_mode
-        self.val = options.test_fold_val
+        if self.mode == 'test':
+            self.val = test
+        else:
+            self.val = options.test_fold_val
         self.label_code = {"Non-AMR": 0, "AMR": 1, "Inconclusive": 2, "None": 3}
         self.log_fout = LOG_FOUT
+        self.folds = options.dataset_dir + '/HULA/ABMR_dataset/folds/'
 
         t_labels = []
         v_labels = []
@@ -64,22 +73,22 @@ class AMRDataset(Dataset):
         for i in range(5):
             if options.num_classes == 3:
                 if options.label_mode == 'cons':
-                    if i == options.test_fold_val:
-                        v_images = v_images + np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
-                        v_labels = v_labels + np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['CONS'].tolist()
+                    if i == self.val:
+                        v_images = v_images + np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
+                        v_labels = v_labels + np.load(self.folds + 'amr_fold{}.npz'.format(i))['CONS'].tolist()
 
                     else:
-                        t_images = t_images + np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
-                        t_labels = t_labels + np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['CONS'].tolist()
+                        t_images = t_images + np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
+                        t_labels = t_labels + np.load(self.folds + 'amr_fold{}.npz'.format(i))['CONS'].tolist()
 
                 elif options.label_mode == 'samp':
-                    if i == options.test_fold_val:
-                        v_images = v_images + np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
-                        v1_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L1'].tolist()
+                    if i == self.val:
+                        v_images = v_images + np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
+                        v1_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L1'].tolist()
                         v1_labels = [list(options.native_labels * a) for a in zip(v1_labels)]
-                        v2_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L2'].tolist()
-                        v3_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L3'].tolist()
-                        v4_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L4'].tolist()
+                        v2_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L2'].tolist()
+                        v3_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L3'].tolist()
+                        v4_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L4'].tolist()
                         v_labels_raw = [a + [b] + [c] + [d] for a, b, c, d in
                                         zip(v1_labels, v2_labels, v3_labels, v4_labels)]
                         v_labels_raw = remove_nested(v_labels_raw, "None")
@@ -87,12 +96,12 @@ class AMRDataset(Dataset):
                         v_labels = v_labels + v_labels_raw
 
                     else:
-                        t_images = t_images + np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
-                        t1_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L1'].tolist()
+                        t_images = t_images + np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES'].tolist()
+                        t1_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L1'].tolist()
                         t1_labels = [list(options.native_labels * a) for a in zip(t1_labels)]
-                        t2_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L2'].tolist()
-                        t3_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L3'].tolist()
-                        t4_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L4'].tolist()
+                        t2_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L2'].tolist()
+                        t3_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L3'].tolist()
+                        t4_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L4'].tolist()
                         t_labels_raw = [a + [b] + [c] + [d] for a, b, c, d in
                                         zip(t1_labels, t2_labels, t3_labels, t4_labels)]
                         t_labels_raw = remove_nested(t_labels_raw, "None")
@@ -103,30 +112,30 @@ class AMRDataset(Dataset):
 
             elif options.num_classes == 2:
                 if options.label_mode == 'cons':
-                    if i == options.test_fold_val:
-                        v_images_raw = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES']
-                        v_labels_raw = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['CONS']
+                    if i == self.val:
+                        v_images_raw = np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES']
+                        v_labels_raw = np.load(self.folds + 'amr_fold{}.npz'.format(i))['CONS']
                         v_images_raw = list(v_images_raw[v_labels_raw != 'Inconclusive'])
                         v_labels_raw = list(v_labels_raw[v_labels_raw != 'Inconclusive'])
                         v_images = v_images + v_images_raw
                         v_labels = v_labels + v_labels_raw
 
                     else:
-                        t_images_raw = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES']
-                        t_labels_raw = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['CONS']
+                        t_images_raw = np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES']
+                        t_labels_raw = np.load(self.folds + 'amr_fold{}.npz'.format(i))['CONS']
                         t_images_raw = list(t_images_raw[t_labels_raw != 'Inconclusive'])
                         t_labels_raw = list(t_labels_raw[t_labels_raw != 'Inconclusive'])
                         t_images = t_images + t_images_raw
                         t_labels = t_labels + t_labels_raw
 
                 elif options.label_mode == 'samp':
-                    if i == options.test_fold_val:
-                        v_images_raw = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES']
-                        v1_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L1'].tolist()
+                    if i == self.val:
+                        v_images_raw = np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES']
+                        v1_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L1'].tolist()
                         v1_labels = [list(options.native_labels * a) for a in zip(v1_labels)]
-                        v2_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L2'].tolist()
-                        v3_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L3'].tolist()
-                        v4_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L4'].tolist()
+                        v2_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L2'].tolist()
+                        v3_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L3'].tolist()
+                        v4_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L4'].tolist()
                         v_labels_raw = [a + [b] + [c] + [d] for a, b, c, d in
                                         zip(v1_labels, v2_labels, v3_labels, v4_labels)]
                         v_labels_raw = remove_nested(v_labels_raw, "None")
@@ -137,12 +146,12 @@ class AMRDataset(Dataset):
                         v_images = v_images + v_images_raw
 
                     else:
-                        t_images_raw = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['FILES']
-                        t1_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L1'].tolist()
+                        t_images_raw = np.load(self.folds + 'amr_fold{}.npz'.format(i))['FILES']
+                        t1_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L1'].tolist()
                         t1_labels = [list(options.native_labels * a) for a in zip(t1_labels)]
-                        t2_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L2'].tolist()
-                        t3_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L3'].tolist()
-                        t4_labels = np.load(options.data_folds + 'amr_fold{}.npz'.format(i))['L4'].tolist()
+                        t2_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L2'].tolist()
+                        t3_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L3'].tolist()
+                        t4_labels = np.load(self.folds + 'amr_fold{}.npz'.format(i))['L4'].tolist()
                         t_labels_raw = [a + [b] + [c] + [d] for a, b, c, d in
                                         zip(t1_labels, t2_labels, t3_labels, t4_labels)]
                         t_labels_raw = remove_nested(t_labels_raw, "None")
@@ -195,35 +204,33 @@ class AMRDataset(Dataset):
     def __getitem__(self, index):
         # Open image
         image_name = self.images[index]
-        img = Image.open(self.imgs_dir + image_name)  # Are other conversions needed?
+        if options.datamode:
+            full_files = [f for f in os.listdir(self.imgs_dir[:-1]) if os.path.isfile(os.path.join(self.imgs_dir[:-1], f))]
+            matching = [s for s in full_files if image_name[:-4] in s]
+            img = Image.open(self.imgs_dir + matching[0])
+        else:
+            img = Image.open(self.imgs_dir + image_name)
         target_label = self.labels[index]  # label_bunch for the image indexed
         if self.mode == 'train' and options.label_mode == 'samp':
             target_label = random.choice(target_label)
 
-        # Min-max scaling
         img = transforms.ToTensor()(img)
-        # img = img.div(255.)
-        img = (img - img.min()) / (img.max() - img.min())
 
         if self.mode == 'train':
             # normalization & augmentation
-            img = transforms.Resize(self.input_size, Image.BILINEAR)(img)  # Bilinear resizing?
+            img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
+            img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
             img = transforms.RandomHorizontalFlip()(img)
             img = transforms.RandomVerticalFlip()(img)
-            # img = transforms.ToTensor()(img)
-            # img = transforms.RandomResizedCrop(self.input_size[0], scale=(0.7, 1.))(img)
-            # img = transforms.RandomRotation(90, resample=PIL.Image.BICUBIC)(img)
-            # img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
-            # img = transforms.ColorJitter(brightness=0.5, contrast=0.5, hue=.05, saturation=.05)(img)
+            img = transforms.RandomResizedCrop(options.img_h, scale=(0.7, 1.))(img)
+            img = transforms.RandomRotation(90, fill=(0,))(img)  # resample=PIL.Image.BICUBIC
 
         if self.mode == 'val':
             img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
-            # img = transforms.ToTensor()(img)
-            # img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
+            img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
         if self.mode == 'test':
             img = transforms.Resize(self.input_size, Image.BILINEAR)(img)
-            # img = transforms.ToTensor()(img)
-            # img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
+            img = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])(img)
 
         return img, self.label_code[target_label]

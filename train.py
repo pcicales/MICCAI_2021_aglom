@@ -2,6 +2,8 @@ import os
 import PIL
 from datetime import datetime
 from ABMR_dataloader import ABMR_Dataset
+from AMRDataset import AMRDataset
+from GN_dataloader import GN_Dataset
 import torch
 import torch.nn as nn
 from prettytable import PrettyTable
@@ -54,8 +56,10 @@ def train():
             len_batch = len(data)
             global_step += 1
 
-            # Reshape stacks into batch, [options.batchsize * options.stack_size, 3, options.img_h, options.img_w]
-            data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
+            if options.classifier_model == 'morphset':
+                # Reshape stacks into batch, [options.batchsize * options.stack_size, 3, options.img_h, options.img_w]
+                data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
+
             if options.cuda:
                 data = data.cuda()
                 target = target.cuda()
@@ -104,12 +108,42 @@ def evaluate(**kwargs):
     with torch.no_grad():
         net_out = []
         net_loss = []
-        for _ in range(options.val_iters):
+        if options.classifier_model == 'morphset':
+            for _ in range(options.val_iters):
+                test_loss = 0
+                targets, outputs = [], []
+                for batch_id, (data, target) in enumerate(test_loader):
+                    len_batch = len(data)
+                    data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
+                    if options.cuda:
+                        data, target = data.cuda(), target.cuda()
+                    output = net(data)
+                    if options.num_classes == 2:
+                        batch_loss = criterion(output, target.type_as(output).unsqueeze(1))
+                    else:
+                        batch_loss = criterion(output, target)
+                    targets += [target]
+                    outputs += [output]
+                    test_loss += batch_loss
+                net_out += [torch.cat(outputs)]
+                net_loss += [test_loss]
+
+            output_stack = torch.stack(net_out, dim=0).permute(1, 0, 2)
+            loss_stack = torch.stack(net_loss)
+            targets = torch.cat(targets)
+
+            if options.num_classes == 2:
+                output_stack = nn.functional.sigmoid(output_stack)
+            else:
+                output_stack = torch.softmax(output_stack, dim=2)  # Row-wise softmax
+
+            out_mean = torch.mean(output_stack, dim=1)
+            test_loss = torch.mean(loss_stack, dim=0)
+            test_acc = compute_accuracy(targets, out_mean, options.num_classes)
+        else:
             test_loss = 0
             targets, outputs = [], []
             for batch_id, (data, target) in enumerate(test_loader):
-                len_batch = len(data)
-                data = data.view(len_batch * options.stack_size, 3, options.img_h, options.img_w)
                 if options.cuda:
                     data, target = data.cuda(), target.cuda()
                 output = net(data)
@@ -118,23 +152,11 @@ def evaluate(**kwargs):
                 else:
                     batch_loss = criterion(output, target)
                 targets += [target]
-                outputs += [output]
+                outputs += [torch.sigmoid(output)]
                 test_loss += batch_loss
-            net_out += [torch.cat(outputs)]
-            net_loss += [test_loss]
 
-        output_stack = torch.stack(net_out, dim=0).permute(1, 0, 2)
-        loss_stack = torch.stack(net_loss)
-        targets = torch.cat(targets)
-
-        if options.num_classes == 2:
-            output_stack = nn.functional.sigmoid(output_stack)
-        else:
-            output_stack = torch.softmax(output_stack, dim=2)  # Row-wise softmax
-
-        out_mean = torch.mean(output_stack, dim=1)
-        test_loss = torch.mean(loss_stack, dim=0)
-        test_acc = compute_accuracy(targets, out_mean, options.num_classes)
+            test_loss /= (batch_id + 1)
+            test_acc = compute_accuracy(torch.cat(targets), torch.cat(outputs), options.num_classes)
 
         # check for improvement
         loss_str, acc_str = '', ''
@@ -142,6 +164,7 @@ def evaluate(**kwargs):
             loss_str, best_loss = '(improved)', test_loss
         if test_acc >= best_acc:
             acc_str, best_acc = '(improved)', test_acc
+
 
         # display
         log_string("validation_loss: {0:.4f} {1}, validation_accuracy: {2:.02%}{3}"
@@ -154,19 +177,35 @@ def evaluate(**kwargs):
             test_logger.scalar_summary(tag, value, global_step)
 
         # save checkpoint model
-        state_dict = net.state_dict()
-        for key in state_dict.keys():
-            state_dict[key] = state_dict[key].cpu()
-        save_path = os.path.join(model_dir, '{}.ckpt'.format(global_step))
-        torch.save({
-            'global_step': global_step,
-            'loss': test_loss,
-            'acc': test_acc,
-            'save_dir': model_dir,
-            'state_dict': state_dict},
-            save_path)
-        log_string('Model saved at: {}'.format(save_path))
-        log_string('--' * 40)
+        if options.efficient_save:
+            if test_acc >= best_acc:
+                state_dict = net.state_dict()
+                for key in state_dict.keys():
+                    state_dict[key] = state_dict[key].cpu()
+                save_path = os.path.join(model_dir, 'TOP_MODEL_FOLD_{}.ckpt'.format(options.test_fold_val))
+                torch.save({
+                    'global_step': global_step,
+                    'loss': test_loss,
+                    'acc': test_acc,
+                    'save_dir': model_dir,
+                    'state_dict': state_dict},
+                    save_path)
+                log_string('Model saved at: {}'.format(save_path))
+                log_string('--' * 40)
+        else:
+            state_dict = net.state_dict()
+            for key in state_dict.keys():
+                state_dict[key] = state_dict[key].cpu()
+            save_path = os.path.join(model_dir, '{}.ckpt'.format(global_step))
+            torch.save({
+                'global_step': global_step,
+                'loss': test_loss,
+                'acc': test_acc,
+                'save_dir': model_dir,
+                'state_dict': state_dict},
+                save_path)
+            log_string('Model saved at: {}'.format(save_path))
+            log_string('--' * 40)
         return best_loss, best_acc
 
 
@@ -213,6 +252,12 @@ if __name__ == '__main__':
     elif options.classifier_model == 'densenet':
         net = densenet.densenet121(pretrained=True, drop_rate=0.2)
         net.classifier = nn.Linear(net.classifier.in_features, out_features=options.num_classes)
+    elif 'efficientnet' in options.classifier_model:
+        if options.num_classes == 2:
+            outputs = 1
+        else:
+            outputs = options.num_classes
+        net = EfficientNet.from_pretrained(options.classifier_model, include_top=True, num_classes=outputs)
     elif options.classifier_model == 'morphset':
         if options.encoder == 'resnet50':
             enc = resnet.resnet50(pretrained=True)
@@ -226,7 +271,7 @@ if __name__ == '__main__':
             d = list(enc.children())[3]
             e = list(enc.children())[4]
             enc = nn.Sequential(*[a, b, cx, d, e])
-        net = MorphSet(options.img_c, options.num_classes, enc)
+        net = MorphSet(options.img_c, options.num_classes, enc, mode=options.ablation_mode)
 
     log_string('{} model Generated.'.format(options.classifier_model))
     log_string("Number of trainable parameters: {}".format(sum(param.numel() for param in net.parameters())))
@@ -259,19 +304,27 @@ if __name__ == '__main__':
     # Load dataset
     ##################################
     if options.dataset == 'ABMR':
-        train_dataset = ABMR_Dataset(mode='train', input_size=(options.img_h, options.img_w))
-        train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
+        if options.classifier_model == 'morphset':
+            train_dataset = ABMR_Dataset(mode='train', input_size=(options.img_h, options.img_w))
+            train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
+                                      shuffle=True, num_workers=options.num_workers, drop_last=False)
+            test_dataset = ABMR_Dataset(mode='val', input_size=(options.img_h, options.img_w))
+            test_loader = DataLoader(test_dataset, batch_size=options.val_batch_size,
+                                     shuffle=False, num_workers=options.num_workers, drop_last=False)
+        else:
+            train_dataset = AMRDataset(mode='train', input_size=(options.img_h, options.img_w), LOG_FOUT=LOG_FOUT)
+            train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
                                   shuffle=True, num_workers=options.num_workers, drop_last=False)
-        test_dataset = ABMR_Dataset(mode='val', input_size=(options.img_h, options.img_w))
-        test_loader = DataLoader(test_dataset, batch_size=options.val_batch_size,
+            test_dataset = AMRDataset(mode='val', input_size=(options.img_h, options.img_w), LOG_FOUT=LOG_FOUT)
+            test_loader = DataLoader(test_dataset, batch_size=options.val_batch_size,
                                  shuffle=False, num_workers=options.num_workers, drop_last=False)
-    elif options.dataset == 'Szeged_GN':
-        train_dataset = ABMR_Dataset(mode='train', input_size=(options.img_h, options.img_w))
+    elif options.dataset == 'GN':
+        train_dataset = GN_Dataset(mode='train', input_size=(options.img_h, options.img_w))
         train_loader = DataLoader(train_dataset, batch_size=options.batch_size,
-                                  shuffle=True, num_workers=options.num_workers, drop_last=False)
-        test_dataset = ABMR_Dataset(mode='val', input_size=(options.img_h, options.img_w))
+                                  shuffle=True, num_workers=options.num_workers, drop_last=True)
+        test_dataset = GN_Dataset(mode='val', input_size=(options.img_h, options.img_w))
         test_loader = DataLoader(test_dataset, batch_size=options.val_batch_size,
-                                 shuffle=False, num_workers=options.num_workers, drop_last=False)
+                                 shuffle=False, num_workers=options.num_workers, drop_last=True)
 
     ##################################
     # TRAINING

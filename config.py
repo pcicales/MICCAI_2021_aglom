@@ -8,43 +8,49 @@ parser.add_option("--mode", dest="mode", default="train",
                   help="set to train or eval")
 parser.add_option("--cuda", dest="cuda", type='int', default=1,
                   help="set it to 1 for running on GPU, 0 for CPU")
-parser.add_option("--gpu-used", dest="gpu_used", type='str', default='3',
+parser.add_option("--gpu-used", dest="gpu_used", type='str', default='0',
                   help="set gpu number to use for training (default 0)")
-parser.add_option('--loo', '--loo', dest='test_fold_val', default=2, type='int',
+parser.add_option('--loo', '--loo', dest='test_fold_val', default=0, type='int',
                   help='Testing Fold (default 0)')
+
+
 parser.add_option('--ablation_mode', '--ablation_mode', dest='ablation_mode', default='setformer', type='str',
                   help='Ablation study, default: setformer, otherwise replaced with a convolution')
+parser.add_option('--efficient_save', '--efficient_save', dest='efficient_save', default=1, type='int',
+                  help='Save only the latest top performing model (defaul: 1)')
 
-# Style data augmentation
-parser.add_option('--style-augm', dest='style_augm', default=1, type='int',
-                  help='train with or without style augmented dataset (default 1)')
-parser.add_option('--style-ref_src', dest='style_ref_src', default='init', type='str',
-                  help='where to get styles to transfer to (init or style_folder)')
+
+parser.add_option('--classifier-model', dest='classifier_model', default='morphset',
+                  help='vgg, inception, resnet, densenet, morphset (default: densenet)')
+parser.add_option('--lm', '--label-mode', dest='label_mode', default='cons', type='str',
+                  help='Label Mode, either consensus (cons) or sampling (samp) (default cons)')
+parser.add_option("--native_labels", dest='native_labels', default=1, type='int',
+                  help="Weight of native labels (i.e. lab of origin labels, default = 1)")
+
+
+parser.add_option('--num_classes', dest='num_classes', default=10, type='int',
+                  help='number of classes to predict (default: 2)')
+parser.add_option("--batch-size", dest='batch_size', type='int', default=8,
+                  help="batch size for training, default is 16. Must be <= num_styles for combined model")
+parser.add_option("--val_batch-size", dest='val_batch_size', type='int', default=24,
+                  help="batch size for testing, set to higher values for faster MC results.")
+
+parser.add_option("--stack-size", dest='stack_size', type='int', default=15,
+                  help="number of images sampled from one patient")
+
+# Log and Validation Intervals/Frequencies
+parser.add_option("--log-interval", dest='log_interval', type='int', default=5,
+                  help="number of batches after which all losses are logged, default is 5")
+parser.add_option('--vf', '--val_freq', dest='val_freq', default=15, type='int',
+                  help='run validation for each <val_freq> iterations (default: 20)')
+
 
 # Train options
 parser.add_option("--epochs", dest='epochs', type='int', default=500,
                   help="number of training epochs, default is 100")
-parser.add_option("--batch-size", dest='batch_size', type='int', default=3,
-                  help="batch size for training, default is 16. Must be <= num_styles for combined model")
-parser.add_option("--val_batch-size", dest='val_batch_size', type='int', default=12,
-                  help="batch size for testing, set to higher values for faster MC results.")
 
-parser.add_option("--mix-styles", dest='mix_styles', type='int', default=1,
-                  help="whether or not to mix 3 styles 1")
-parser.add_option("--style-entropy", dest='style_entropy', type='int', default=0,
-                  help="whether or not to initialize as normal distribution instead of all ones")
 
 # Weights and Hyperparameters
-parser.add_option("--stack-size", dest='stack_size', type='int', default=12,
-                  help="number of images sampled from one patient")
-parser.add_option("--num-styles", dest='num_styles', type='int', default=27,
-                  help="number of style images used during training, default is 12")
-parser.add_option("--content-weight", dest='cont_weight', type='float', default=1,
-                  help="weight for content loss, default is 1e5")
-parser.add_option("--style-weight", dest='style_weight', type='float', default=1e4,
-                  help="weight for style loss, default is 1e10")
-parser.add_option("--classifier-weight", dest='classifier_weight', type='float', default=1,
-                  help="weight for classifier loss, default is 1")
 parser.add_option("--seed", dest='seed', type='int', default=42,
                   help="random seed for training, default is 42")
 parser.add_option("--lr", dest='lr', type='float', default=1e-4,
@@ -59,17 +65,11 @@ parser.add_option('--two-optimizers', dest='two_optimizers', default=1, type='in
 ###############
 # AMR OPTIONS #
 ###############
-parser.add_option('--lm', '--label-mode', dest='label_mode', default='cons', type='str',
-                  help='Label Mode, either consensus (cons) or sampling (samp) (default cons)')
-parser.add_option("--native_labels", dest='native_labels', default=1, type='int',
-                  help="Weight of native labels (i.e. lab of origin labels, default = 1)")
-parser.add_option('--num_classes', dest='num_classes', default=2, type='int',
-                  help='number of classes to predict (default: 2)')
 
 ####################
 # MorphSet OPTIONS #
 ####################
-parser.add_option('--hea', '--heads', dest='heads', default=1, type='int',
+parser.add_option('--hea', '--heads', dest='heads', default=2, type='int',
                   help='The number of attention heads in the set operations.')
 parser.add_option('--enc', '--enc', dest='encoder', default='efficientnet-b3', type='str',
                   help='The feature encoder prior to our setformer operation (default: efficientnet-b3)')
@@ -84,9 +84,9 @@ parser.add_option('--vi', '--vi', dest='val_iters', default=100, type='int',
 
 
 # Dataset
-parser.add_option("--dataset_dir", dest='dataset_dir', default="/home/cougarnet.uh.edu/pcicales/Documents/data",
+parser.add_option("--dataset_dir", dest='dataset_dir', default="/data/public",
                   help="path to dataset directory")
-parser.add_option("--dataset", dest='dataset', default="ABMR",
+parser.add_option("--dataset", dest='dataset', default="GN",
                   help="desired dataset for training")
 parser.add_option("--datamode", dest='datamode', default=1, type='int',
                   help="Input data mode (default: 1, for mixed, 0 for raw")
@@ -100,15 +100,8 @@ parser.add_option('--classifier-load_model_path', dest='classifier_load_model_pa
                           'save/classifier/20201212_182753/models/5143.ckpt',
                   help='path to load a .ckpt model')
 
-# Log and Validation Intervals/Frequencies
-parser.add_option("--log-interval", dest='log_interval', type='int', default=5,
-                  help="number of images after which all losses are logged, default is 5")
-parser.add_option('--vf', '--val_freq', dest='val_freq', default=20, type='int',
-                  help='run validation for each <val_freq> iterations (default: 20)')
-
 # Classifier Options
-parser.add_option('--classifier-model', dest='classifier_model', default='morphset',
-                  help='vgg, inception, resnet, densenet, morphset (default: densenet)')
+
 parser.add_option('--j', '--num-workers', dest='num_workers', default=16, type='int',
                   help='number of data loading workers (default: 16)')
 
